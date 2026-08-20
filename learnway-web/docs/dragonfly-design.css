@@ -1,0 +1,35 @@
+@theme {
+  /* Colors */
+  --color-black-canvas: #000000;
+  --color-off-white: #f2f2f2;
+  --color-dragonfly-orange: #fa4c14;
+  --color-mid-grey: #7d7d7d;
+  --color-pink-accent: #ec39b6;
+  --color-purple-accent: #5014fa;
+  --color-black-canvas: #000000;
+  --color-off-white: #f2f2f2;
+  --color-dragonfly-orange: #fa4c14;
+  --color-mid-grey: #7d7d7d;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-nav-padding: 12px;
+  --spacing-lg: 24px;
+  --spacing-xl: 48px;
+  --spacing-2xl: 88px;
+  --spacing-section: 180px;
+  --spacing-column: 386px;
+  --spacing-wide: 483px;
+
+  /* Border Radius */
+  --radius-pill-sm: 4px;
+
+  /* Fonts */
+  --font-non-natural-grotesk: "NON Natural Grotesk", sans-serif;
+  --font-fk-roman-standard: "FK Roman Standard", sans-serif;
+  --font-non-natural-mono: "NON Natural Mono", sans-serif;
+  --font-times-new-roman: "Times New Roman", sans-serif;
+
+}

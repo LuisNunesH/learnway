@@ -1,0 +1,146 @@
+/* Layout compartilhado das telas de login/registro (sistema "Papel").
+   A esquerda é a capa da revista; a direita, o formulário. */
+
+.auth {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  /* fundo transparente para a grade editorial (lw-backdrop) aparecer */
+  background: transparent;
+}
+
+.auth__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--lw-space-3xl);
+  overflow: hidden;
+  border-right: 1px solid var(--lw-rule);
+}
+
+.auth__logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--lw-font-display);
+  font-variation-settings: var(--lw-display-variation);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: var(--lw-tracking-display);
+  color: var(--lw-ink);
+  margin-bottom: var(--lw-space-3xl);
+
+  lw-icon { color: var(--lw-accent); }
+}
+
+/* A manchete: serifa grande, tracking apertado, itálico no destaque. */
+.auth__headline {
+  font-family: var(--lw-font-display);
+  font-variation-settings: var(--lw-display-variation);
+  font-size: var(--lw-text-hero);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: var(--lw-tracking-hero);
+  margin-bottom: var(--lw-space-lg);
+  max-width: 12ch;
+
+  em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--lw-accent);
+  }
+}
+
+.auth__tagline {
+  font-family: var(--lw-font-prose);
+  color: var(--lw-ink-muted);
+  font-size: 18px;
+  line-height: 1.55;
+  max-width: 42ch;
+  padding-bottom: var(--lw-space-xl);
+  margin-bottom: var(--lw-space-xl);
+  border-bottom: 1px solid var(--lw-rule);
+}
+
+.auth__points {
+  display: flex;
+  flex-direction: column;
+
+  .point {
+    display: flex;
+    align-items: center;
+    gap: var(--lw-space-md);
+    padding: var(--lw-space-md) 0;
+    font-size: var(--lw-text-sm);
+    color: var(--lw-ink);
+    max-width: 42ch;
+  }
+
+  .point + .point { border-top: 1px solid var(--lw-rule-hair); }
+
+  .point__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--lw-paper-sunken);
+    border: 1px solid var(--lw-rule);
+    color: var(--lw-ink-muted);
+  }
+}
+
+.auth__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lw-space-2xl) var(--lw-space-xl);
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 400px;
+
+  h2 {
+    font-size: var(--lw-text-h1);
+    letter-spacing: var(--lw-tracking-display);
+    margin-bottom: var(--lw-space-xs);
+  }
+
+  .sub {
+    font-family: var(--lw-font-prose);
+    color: var(--lw-ink-muted);
+    font-size: var(--lw-text-body);
+    padding-bottom: var(--lw-space-lg);
+    margin-bottom: var(--lw-space-xl);
+    border-bottom: 1px solid var(--lw-rule);
+  }
+
+  .swap {
+    padding-top: var(--lw-space-lg);
+    margin-top: var(--lw-space-xl);
+    border-top: 1px solid var(--lw-rule);
+    text-align: center;
+    font-size: var(--lw-text-sm);
+    color: var(--lw-ink-muted);
+
+    a {
+      color: var(--lw-accent-deep);
+      font-weight: 550;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    a:hover { text-decoration-thickness: 2px; }
+  }
+}
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth__brand { display: none; }
+  .auth__panel { min-height: 100vh; }
+}

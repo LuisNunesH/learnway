@@ -1,0 +1,106 @@
+name: Deploy backend (Oracle Cloud)
+
+# Roda quando o backend muda. Mexer só no frontend não gasta minuto aqui —
+# o Cloudflare Pages cuida daquele lado sozinho.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'learnway-api/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:   # permite disparar manualmente pela aba Actions
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/learnway-api
+
+permissions:
+  contents: read
+  packages: write   # publicar a imagem no GitHub Container Registry
+
+jobs:
+  deploy:
+    name: Build ARM64, publicar e implantar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preparar o Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login no registro de imagens do próprio GitHub: de graça, sem conta
+      # extra, e o GITHUB_TOKEN já vem pronto — não precisa cadastrar segredo.
+      - name: Autenticar no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Definir as tags
+        id: meta
+        run: |
+          IMAGE=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "tagged=$IMAGE:${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      # A VM Always Free da Oracle é ARM (Ampere A1), então a imagem PRECISA
+      # ser linux/arm64. O Dockerfile compila no x86 do runner e só o runtime
+      # é ARM — sem isso, o Maven rodaria emulado e o build levaria ~20 min.
+      - name: Build e push (linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./learnway-api
+          platforms: linux/arm64
+          push: true
+          provenance: false   # o Docker antigo da VM não entende manifesto de atestação
+          tags: |
+            ${{ steps.meta.outputs.tagged }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # O deploy é deliberadamente burro: escreve a tag nova no .env e manda o
+      # compose subir. Toda a configuração com segredo já mora na VM
+      # (~/learnway/api.env), então nada sensível transita por aqui.
+      - name: Implantar na VM por SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd ~/learnway
+
+            echo "API_IMAGE=${{ steps.meta.outputs.tagged }}" > .env
+
+            docker compose pull api
+            docker compose up -d
+
+            # Espera ficar saudável de verdade antes de declarar sucesso.
+            # A 8080 está publicada só no loopback da VM (ver docker-compose.yml).
+            echo "aguardando health..."
+            for i in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null 2>&1; then
+                echo "API saudável"
+                exit 0
+              fi
+              sleep 5
+            done
+
+            echo "!! a API não respondeu a tempo — últimos logs:"
+            docker compose logs --tail 40 api
+            exit 1
+
+      - name: Resumo
+        if: success()
+        run: |
+          echo "### Backend no ar 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Imagem: \`${{ steps.meta.outputs.tagged }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY

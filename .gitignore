@@ -1,0 +1,47 @@
+# ─── Segredos ────────────────────────────────────────────────────
+# Nunca versionar: DATABASE_URL do Neon, JWT_SECRET, chaves de IA e
+# credenciais de OAuth vivem aqui. Os *.example é que vão pro repo.
+.env
+.env.*
+!.env.example
+
+# O arquivo de variáveis da VM. O nome NÃO começa com ponto, então as regras
+# acima não o pegariam — e ele carrega exatamente os mesmos segredos.
+api.env
+deploy/api.env
+!api.env.example
+
+# ─── Java / Maven ────────────────────────────────────────────────
+target/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties.bak
+
+# ─── Node / Angular ──────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+
+# ─── IDE / editor ────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+.vscode/
+
+# ─── Ferramentas locais ──────────────────────────────────────────
+.claude/
+.github/modernize/
+
+# ─── SO ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ────────────────────────────────────────────────────────
+*.log
+npm-debug.log*

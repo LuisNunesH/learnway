@@ -1,0 +1,33 @@
+# Você desenvolve no Windows, mas a CI e os contêineres rodam em Linux. Sem estas
+# regras um arquivo commitado com CRLF vira erro difícil de diagnosticar lá:
+# `mvnw` responde "bad interpreter: No such file or directory", e passos `run: |`
+# do workflow quebram no meio.
+#
+# Por padrão, deixe o git normalizar texto para LF no repositório.
+* text=auto eol=lf
+
+# Estes PRECISAM ser LF, sem exceção — são executados por um shell Linux.
+*.sh            text eol=lf
+mvnw            text eol=lf
+Dockerfile      text eol=lf
+*.dockerfile    text eol=lf
+.dockerignore   text eol=lf
+_redirects      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+
+# Estes só rodam no Windows: mantenha CRLF.
+*.cmd           text eol=crlf
+*.bat           text eol=crlf
+*.ps1           text eol=crlf
+
+# Binários: o git não deve tentar converter nada.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.jar binary
+*.zip binary

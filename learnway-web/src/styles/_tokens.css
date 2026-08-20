@@ -1,0 +1,227 @@
+/* ============================================================
+   LearnWay — design tokens (sistema "Papel")
+   Fonte da verdade dos VALORES. Nunca escreva hex/px literal em
+   componente: use var(--lw-*). Falta um token? Sinalize, não invente.
+
+   Direção EDITORIAL: papel quente claro, tinta preta, títulos em
+   serifa, prosa em serifa de leitura, UI em grotesca neutra,
+   micro-labels em mono caixa-alta. Profundidade = espaço em branco
+   + fio de 1px. Um acento terracota, usado com parcimônia.
+
+   Todos os pares de cor foram validados em WCAG AA
+   (scratchpad contrast-editorial.js — texto ≥4.5:1, rampas
+   ordinais ≥1.25 entre vizinhos).
+   ============================================================ */
+
+:root {
+  /* ---------- 1. PAPEL (superfícies) ----------
+     Quatro camadas quentes. A hierarquia é sutil de propósito:
+     quem separa as coisas é o fio (--lw-rule) e o espaço, não a cor. */
+  --lw-paper:         #faf8f3;   /* fundo da página — papel */
+  --lw-paper-raised:  #ffffff;   /* card, folha por cima do papel */
+  --lw-paper-sunken:  #f1eee6;   /* rebaixo: código, cabeçalho de tabela, campo */
+  --lw-paper-deep:    #e7e2d6;   /* hover / camada mais funda */
+
+  /* ---------- 2. TINTA (texto) ---------- */
+  --lw-ink:        #191714;   /* 16.9:1 no papel */
+  --lw-ink-muted:  #655f53;   /*  5.9:1 — passa AA em todas as superfícies */
+  --lw-ink-faint:  #948c7d;   /*  3.1:1 — metadado/eyebrow, NUNCA texto essencial */
+
+  /* ---------- 3. FIO (réguas e bordas) ----------
+     A régua é o único elemento estrutural do sistema. */
+  --lw-rule:         #dad3c3;
+  --lw-rule-strong:  #c9c2b2;
+  --lw-rule-hair:    #ece8de;   /* divisória interna, quase invisível */
+
+  /* ---------- 4. ACENTO ----------
+     Terracota de tinta de impressão. Um por tela, na ação principal. */
+  --lw-accent:       #b0472b;   /* 5.2:1 no papel */
+  --lw-accent-deep:  #8e3620;   /* hover, links, texto sobre rebaixo */
+  --lw-accent-wash:  rgba(176, 71, 43, 0.10);
+  --lw-accent-edge:  rgba(176, 71, 43, 0.30);
+
+  /* Tinta clara para texto/ícone POR CIMA de um preenchimento sólido colorido
+     (botão primário, marcador concluído, contador do calendário). Validado
+     ≥4.5:1 contra acento, correto, parcial, errado e nível. */
+  --lw-on-color: #ffffff;
+
+  /* ---------- 5. ESTADOS DE AVALIAÇÃO ----------
+     O coração do LearnWay. Todos testados sobre papel e sobre card. */
+  --lw-eval-idle:     var(--lw-ink-muted);
+  --lw-eval-pending:  var(--lw-ink);        /* sem cor própria — comunica pelo MOVIMENTO */
+  --lw-eval-correct:  #2f6b45;              /* 6.0:1 */
+  --lw-eval-partial:  #8a5a0b;              /* 5.6:1 */
+  --lw-eval-wrong:    #a62a22;              /* 6.7:1 */
+
+  /* washes: preenchem card, não texto */
+  --lw-eval-correct-bg: rgba(47, 107, 69, 0.10);
+  --lw-eval-partial-bg: rgba(138, 90, 11, 0.12);
+  --lw-eval-wrong-bg:   rgba(166, 42, 34, 0.10);
+  --lw-eval-idle-bg:    rgba(25, 23, 20, 0.04);
+
+  --lw-eval-correct-edge: rgba(47, 107, 69, 0.30);
+  --lw-eval-partial-edge: rgba(138, 90, 11, 0.32);
+  --lw-eval-wrong-edge:   rgba(166, 42, 34, 0.30);
+
+  /* ---------- 6. GAMIFICAÇÃO ----------
+     Cinco matizes no total no sistema inteiro: terracota, verde,
+     âmbar, carmim e índigo. Streak divide o âmbar com "parcial". */
+  --lw-xp:      var(--lw-accent);
+  --lw-streak:  #8a5a0b;
+  --lw-level:   #3d4a7a;   /* 8.1:1 — pode ser texto, diferente do tema antigo */
+
+  --lw-streak-bg:  rgba(138, 90, 11, 0.12);
+  --lw-level-bg:   rgba(61, 74, 122, 0.10);
+  --lw-level-ink:  var(--lw-level);
+  --lw-streak-edge: rgba(138, 90, 11, 0.32);
+  --lw-level-edge:  rgba(61, 74, 122, 0.30);
+
+  /* ---------- 7. RAMPA DE ATIVIDADE (heatmap do perfil) ----------
+     Matiz único terracota, passos ordinais ≥1.25 entre vizinhos. */
+  --lw-ramp-0: #f1eee6;
+  --lw-ramp-1: #ebcdb8;
+  --lw-ramp-2: #d99a6e;
+  --lw-ramp-3: #bf6338;
+  --lw-ramp-4: #8e3620;
+
+  /* ---------- 7b. CÓDIGO ----------
+     Paleta clara própria: o bloco de markdown e o CodeMirror compartilham
+     estas tintas. Todos os pares ≥4.5:1 sobre --lw-code-bg (validados no
+     script). O CodeMirror repete os literais em code-editor.ts porque monta
+     a folha de estilo em JS e não enxerga custom properties. */
+  --lw-code-bg:    #f5f2ea;
+  --lw-code-ink:   #191714;
+  --lw-code-cmt:   #6e6959;
+  --lw-code-kw:    #8e3620;
+  --lw-code-type:  #1f5c7a;
+  --lw-code-str:   #2f6b45;
+  --lw-code-num:   #7a4e8c;
+  --lw-code-ann:   #8a5a0b;
+  --lw-code-punct: #655f53;
+
+  /* ---------- 8. TIPOGRAFIA ----------
+     Três vozes: serifa de display (personalidade), serifa de leitura
+     (prosa longa), grotesca (UI). Mono só para micro-labels e código. */
+  --lw-font-display: "Fraunces", "Source Serif 4", Georgia, serif;
+  --lw-font-prose:   "Source Serif 4", Georgia, "Times New Roman", serif;
+  --lw-font-ui:      "Inter", system-ui, -apple-system, sans-serif;
+  --lw-font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --lw-text-hero:    clamp(44px, 7vw, 76px);
+  --lw-text-display: 44px;
+  --lw-text-h1:      34px;
+  --lw-text-h2:      25px;
+  --lw-text-h3:      19px;
+  --lw-text-body:    16px;
+  --lw-text-sm:      14px;
+  --lw-text-micro:   11px;
+
+  /* Serifa quer tracking neutro ou levemente negativo só no display. */
+  --lw-tracking-hero:    -0.025em;
+  --lw-tracking-display: -0.02em;
+  --lw-tracking-tight:   -0.01em;
+  --lw-tracking-normal:   0;
+  --lw-tracking-micro:    0.09em;   /* mono caixa-alta pede respiro */
+
+  --lw-leading-tight: 1.12;
+  --lw-leading-body:  1.6;
+  --lw-leading-prose: 1.75;   /* leitura longa: teoria e enunciados */
+
+  /* Eixos variáveis do Fraunces: um toque de "wonk" dá o ar editorial. */
+  --lw-display-variation: "SOFT" 20, "WONK" 1;
+
+  /* ---------- 9. ESPAÇAMENTO (grid de 4px, mais generoso) ---------- */
+  --lw-space-xs:  4px;
+  --lw-space-sm:  8px;
+  --lw-space-md:  12px;
+  --lw-space-lg:  18px;
+  --lw-space-xl:  28px;
+  --lw-space-2xl: 56px;
+  --lw-space-3xl: 88px;
+
+  /* Altura do cabeçalho fixo (12px + avatar 34px + 12px + fio). Quem gruda
+     embaixo dele calcula o `top` a partir daqui, nunca de um número solto. */
+  --lw-masthead-h: 59px;
+
+  /* Medida de leitura — largura ideal de coluna de texto. */
+  --lw-measure:      68ch;
+  --lw-page-width:   1080px;
+  --lw-page-narrow:  760px;
+
+  /* ---------- 10. FORMA ----------
+     Cantos discretos: papel cortado, não botão de app. */
+  --lw-radius-sm: 3px;
+  --lw-radius:    6px;
+  --lw-radius-lg: 10px;
+
+  /* ---------- 11. PROFUNDIDADE ----------
+     Só camadas FLUTUANTES ganham sombra (menu, drawer, toast, modal).
+     Card não flutua: card é folha sobre papel, definido por fio. */
+  --lw-lift-sm: 0 1px 2px rgba(25, 23, 20, 0.05);
+  --lw-lift:    0 2px 4px rgba(25, 23, 20, 0.04), 0 10px 28px rgba(25, 23, 20, 0.09);
+  --lw-lift-lg: 0 4px 8px rgba(25, 23, 20, 0.05), 0 24px 56px rgba(25, 23, 20, 0.13);
+
+  /* Véu de tinta atrás de modal/drawer, e papel translúcido das barras fixas.
+     Precisam ser literais: rgba() não aceita var() como cor inteira. */
+  --lw-scrim:             rgba(25, 23, 20, 0.30);
+  --lw-paper-veil:        rgba(250, 248, 243, 0.82);  /* cabeçalho: deixa a grade passar */
+  --lw-paper-veil-strong: rgba(250, 248, 243, 0.94);  /* nav de rodapé no mobile */
+
+  /* ---------- 12. FOCO ---------- */
+  --lw-focus-width:  2px;
+  --lw-focus-offset: 2px;
+  --lw-focus-color:  var(--lw-accent-deep);
+
+  /* ---------- 13. MOVIMENTO ---------- */
+  --lw-blur-nav: 10px;
+  --lw-ease:      cubic-bezier(0.2, 0.7, 0.25, 1);
+  --lw-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --lw-dur-fast: 140ms;
+  --lw-dur:      260ms;
+  --lw-dur-slow: 520ms;
+
+  color-scheme: light;
+
+  /* ============================================================
+     ALIASES DO SISTEMA ANTERIOR (Dragonfly escuro).
+     As telas ainda pedem estes nomes; aqui eles passam a apontar
+     para o papel. Tela reescrita usa os nomes editoriais acima.
+     ============================================================ */
+  --lw-black:      var(--lw-ink);
+  --lw-off-white:  var(--lw-ink);      /* "a cor do primeiro plano" */
+  --lw-grey:       var(--lw-ink-muted);
+  --lw-orange:     var(--lw-accent);   /* o acento mudou de matiz, não de papel */
+
+  --lw-surface-0:   var(--lw-paper);
+  --lw-surface-1:   var(--lw-paper-raised);
+  --lw-surface-2:   var(--lw-paper-sunken);
+  --lw-surface-3:   var(--lw-paper-deep);
+  --lw-surface-nav: rgba(25, 23, 20, 0.04);
+
+  --lw-border:        var(--lw-rule);
+  --lw-border-strong: var(--lw-rule-strong);
+
+  --lw-text:        var(--lw-ink);
+  --lw-text-muted:  var(--lw-ink-muted);
+  --lw-text-faint:  var(--lw-ink-faint);
+  --lw-text-accent: var(--lw-accent-deep);
+
+  --lw-font-grotesk: var(--lw-font-ui);      /* UI continua em grotesca */
+  --lw-font-roman:   var(--lw-font-display); /* display virou serifa de verdade */
+}
+
+/* A barra de rolagem volta a existir: em página clara ela é
+   informação de posição, não sujeira visual. */
+html {
+  scrollbar-color: var(--lw-rule-strong) transparent;
+  scrollbar-width: thin;
+}
+
+/* Quem pediu menos movimento, recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lw-dur-fast: 0ms;
+    --lw-dur:      0ms;
+    --lw-dur-slow: 0ms;
+  }
+}

@@ -1,0 +1,96 @@
+name: Deploy backend (Cloud Run) — alternativa manual
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESTE WORKFLOW ESTÁ DESLIGADO no dia a dia. O deploy ativo é o Oracle Cloud
+# (deploy-backend.yml).
+#
+# Ele existe porque o Cloud Run só ficou de fora por causa da exigência de
+# pré-pagamento de R$ 150 que o Google faz no Brasil. Se você resolver isso
+# (outro cartão costuma bastar), o caminho já está pronto e testado:
+#
+#   1. siga a Parte "Google Cloud" do DEPLOY.md
+#   2. troque PROJECT_ID e REGION aqui embaixo
+#   3. cadastre os secrets GCP_WIF_PROVIDER e GCP_SERVICE_ACCOUNT
+#   4. rode este workflow pela aba Actions ("Run workflow")
+#
+# Para torná-lo automático, acrescente o gatilho de push e tire o do outro:
+#
+#   on:
+#     push:
+#       branches: [main]
+#       paths: ['learnway-api/**']
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  workflow_dispatch:
+
+# ⚠️ EDITE ESTES DOIS VALORES (não são segredos).
+env:
+  PROJECT_ID: SEU-PROJETO-GCP
+  REGION: southamerica-east1
+  SERVICE: learnway-api
+  REPOSITORY: learnway
+
+permissions:
+  contents: read
+  id-token: write   # token OIDC do Workload Identity Federation
+
+jobs:
+  deploy:
+    name: Build, push e deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Autenticar no Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Instalar o gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Liberar o Docker no Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Preparar o Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # O Cloud Run é x86 — aqui NÃO se usa linux/arm64 (isso é coisa da VM
+      # ARM da Oracle). O mesmo Dockerfile serve para as duas arquiteturas.
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: ./learnway-api
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Sem --set-env-vars de propósito: os segredos foram configurados uma vez
+      # no serviço e o deploy os preserva.
+      - name: Deploy no Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE:$GITHUB_SHA" \
+            --region "$REGION" \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --cpu-boost \
+            --min-instances 0 \
+            --max-instances 2 \
+            --concurrency 40 \
+            --timeout 120 \
+            --quiet
+
+      - name: Mostrar a URL do serviço
+        run: |
+          echo "### Backend no ar 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')" >> $GITHUB_STEP_SUMMARY

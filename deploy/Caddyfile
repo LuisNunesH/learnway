@@ -1,0 +1,42 @@
+# Proxy reverso da learnway-api.
+#
+# O Caddy pede e renova o certificado do Let's Encrypt sozinho — sem certbot,
+# sem cron, sem lembrar de renovar. Basta o domínio abaixo apontar para o IP
+# desta VM e as portas 80 e 443 estarem abertas.
+#
+# ⚠️ TROQUE o domínio pelo seu (ex.: learnway-api.duckdns.org) e o e-mail.
+
+learnway-api.duckdns.org {
+	# E-mail que o Let's Encrypt usa para avisar de expiração.
+	tls seuemail@exemplo.com
+
+	# "api" é o nome do serviço no docker-compose; o DNS interno do Docker
+	# resolve para o contêiner. A porta 8080 nunca fica exposta na internet.
+	reverse_proxy api:8080 {
+		# A app precisa saber que o cliente chegou por HTTPS, senão os
+		# redirecionamentos do OAuth voltam como http:// e o login quebra.
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+		header_up Host {host}
+	}
+
+	encode gzip zstd
+
+	# Cabeçalhos de segurança básicos. O CORS NÃO entra aqui: quem responde
+	# por ele é o Spring (learnway.cors.allowed-origins) — duplicar geraria
+	# dois Access-Control-Allow-Origin e o navegador rejeitaria os dois.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 10MB
+			roll_keep 3
+		}
+	}
+}

@@ -1,0 +1,194 @@
+{
+  "color": {
+    "Black Canvas": {
+      "$type": "color",
+      "$value": "#000000",
+      "$description": "Full-page background — site does not switch to a light surface; CSSOM data identical to dark theme"
+    },
+    "Off-White": {
+      "$type": "color",
+      "$value": "#f2f2f2",
+      "$description": "Primary foreground text across both themes"
+    },
+    "Dragonfly Orange": {
+      "$type": "color",
+      "$value": "#fa4c14",
+      "$description": "Hero wordmark and accent elements"
+    },
+    "Mid Grey": {
+      "$type": "color",
+      "$value": "#7d7d7d",
+      "$description": "Secondary text, footer labels"
+    },
+    "Pink Accent": {
+      "$type": "color",
+      "$value": "#ec39b6",
+      "$description": "Localized accent in header zone, rare highlight"
+    },
+    "Purple Accent": {
+      "$type": "color",
+      "$value": "#5014fa",
+      "$description": "Localized accent in header zone, rare highlight"
+    }
+  },
+  "typography": {
+    "Hero Display — Grotesque": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "NON Natural Grotesk",
+        "fontSize": "152.5px",
+        "fontWeight": 400,
+        "lineHeight": "152.5px",
+        "letterSpacing": "-6.4px"
+      },
+      "$description": "Primary hero wordmark / brand display at viewport scale"
+    },
+    "Hero Display — Roman": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "FK Roman Standard",
+        "fontSize": "185.5px",
+        "fontWeight": 300,
+        "lineHeight": "166.95px",
+        "letterSpacing": "-12.24px"
+      },
+      "$description": "Alternate hero display wordmark, large editorial headline"
+    },
+    "Section Heading": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "NON Natural Grotesk",
+        "fontSize": "39px",
+        "fontWeight": 400,
+        "lineHeight": "39px",
+        "letterSpacing": "-1.6px"
+      },
+      "$description": "Section-level headings and sub-display text"
+    },
+    "Sub-Display Roman": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "FK Roman Standard",
+        "fontSize": "40px",
+        "fontWeight": 300,
+        "lineHeight": "36px",
+        "letterSpacing": "-0.8px"
+      },
+      "$description": "Editorial sub-display, pull quotes"
+    },
+    "Mid Roman": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "FK Roman Standard",
+        "fontSize": "85.5px",
+        "fontWeight": 300,
+        "lineHeight": "61.56px",
+        "letterSpacing": "-5.28px"
+      },
+      "$description": "Mid-scale display / animated number or stat"
+    },
+    "Body Roman": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "FK Roman Standard",
+        "fontSize": "24px",
+        "fontWeight": 300,
+        "lineHeight": "33.6px",
+        "letterSpacing": "-0.48px"
+      },
+      "$description": "Body copy, article text, descriptive paragraphs"
+    },
+    "Body Grotesque": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "NON Natural Grotesk",
+        "fontSize": "16px",
+        "fontWeight": 400,
+        "lineHeight": "16px",
+        "letterSpacing": "normal"
+      },
+      "$description": "UI body text, nav labels, general interface copy"
+    },
+    "Body Roman Small": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "FK Roman Standard",
+        "fontSize": "16px",
+        "fontWeight": 300,
+        "lineHeight": "22.4px",
+        "letterSpacing": "-0.32px"
+      },
+      "$description": "Small body copy, captions, footnotes"
+    },
+    "Mono Label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "NON Natural Mono",
+        "fontSize": "10px",
+        "fontWeight": 400,
+        "lineHeight": "10px",
+        "letterSpacing": "0.4px"
+      },
+      "$description": "Micro UI labels, status indicators, nav decorative text"
+    },
+    "Serif Decorative": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Times New Roman",
+        "fontSize": "16px",
+        "fontWeight": 400,
+        "lineHeight": "normal",
+        "letterSpacing": "normal"
+      },
+      "$description": "Corner decorative letterforms, fallback serif glyphs"
+    }
+  },
+  "spacing": {
+    "xs": {
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    "sm": {
+      "$type": "dimension",
+      "$value": "8px"
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "nav-padding": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "xl": {
+      "$type": "dimension",
+      "$value": "48px"
+    },
+    "2xl": {
+      "$type": "dimension",
+      "$value": "88px"
+    },
+    "section": {
+      "$type": "dimension",
+      "$value": "180px"
+    },
+    "column": {
+      "$type": "dimension",
+      "$value": "386px"
+    },
+    "wide": {
+      "$type": "dimension",
+      "$value": "483px"
+    }
+  },
+  "borderRadius": {
+    "pill-sm": {
+      "$type": "dimension",
+      "$value": "4px"
+    }
+  }
+}

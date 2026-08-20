@@ -1,0 +1,124 @@
+/* ============================================================
+   LearnWay — design tokens
+   Base: extração do site da Dragonfly, adaptada para app.
+   Salve em: src/styles/_tokens.css
+   ============================================================ */
+
+:root {
+  /* ---------- 1. CORES BASE (vieram da extração, sem mudança) ---------- */
+  --lw-black:       #000000;
+  --lw-off-white:   #f2f2f2;
+  --lw-grey:        #7d7d7d;
+  --lw-orange:      #fa4c14;   /* marca — UMA vez por tela, na ação principal */
+  --lw-pink:        #ec39b6;
+  --lw-purple:      #5014fa;
+
+  /* ---------- 2. SUPERFÍCIES ----------
+     A Dragonfly é preto puro e sem sombra nenhuma. App precisa separar
+     camadas, então em vez de sombra usamos tinta + borda. */
+  --lw-surface-0:      #000000;   /* fundo da página */
+  --lw-surface-1:      #0a0a0a;   /* card */
+  --lw-surface-2:      #141414;   /* card sobre card, dropdown, modal */
+  --lw-surface-nav:    rgba(242, 242, 242, 0.06);  /* pill do menu fixo */
+  --lw-border:         rgba(242, 242, 242, 0.10);
+  --lw-border-strong:  rgba(242, 242, 242, 0.24);
+
+  /* ---------- 3. TEXTO ---------- */
+  --lw-text:         var(--lw-off-white);   /* 18.8:1 no preto */
+  --lw-text-muted:   var(--lw-grey);        /*  5.1:1 — passa AA */
+  --lw-text-accent:  var(--lw-orange);      /*  6.1:1 — passa AA */
+
+  /* ---------- 4. ESTADOS DE AVALIAÇÃO (NÃO vieram da extração) ----------
+     A Dragonfly não tem esses estados porque é site institucional.
+     Aqui é o coração do LearnWay. Todos testados no fundo preto. */
+  --lw-eval-idle:     var(--lw-grey);
+  --lw-eval-pending:  var(--lw-off-white);  /* sem cor própria — o que comunica é o MOVIMENTO */
+  --lw-eval-correct:  #14fa4c;              /* 14.8:1 — é o #fa4c14 com os canais rotacionados */
+  --lw-eval-partial:  #fab514;              /* 11.7:1 */
+  --lw-eval-wrong:    #fa1440;              /*  5.2:1 */
+
+  /* fundos fracos dos mesmos estados (para preencher card, não texto) */
+  --lw-eval-correct-bg: rgba(20, 250, 76, 0.10);
+  --lw-eval-partial-bg: rgba(250, 181, 20, 0.10);
+  --lw-eval-wrong-bg:   rgba(250, 20, 64, 0.10);
+
+  /* ---------- 5. GAMIFICAÇÃO ----------
+     Reaproveita os três acentos que já existiam na paleta original. */
+  --lw-xp:      var(--lw-orange);
+  --lw-streak:  var(--lw-pink);
+  --lw-level:   var(--lw-purple);   /* ⚠ 2.8:1 — só fundo/borda, NUNCA texto */
+
+  /* ---------- 6. TIPOGRAFIA ----------
+     As fontes originais (NON Natural Grotesk / FK Roman Standard) são
+     customizadas e não estão disponíveis. Substitutas livres que mantêm
+     o sistema de duas famílias: */
+  --lw-font-grotesk: "Space Grotesk", system-ui, sans-serif;  /* UI, botões, títulos */
+  --lw-font-roman:   "Instrument Serif", Georgia, serif;      /* display editorial */
+  --lw-font-mono:    "JetBrains Mono", ui-monospace, monospace; /* micro-labels */
+
+  /* escala — a original vai até 185px porque é landing.
+     Aqui: display grande só na landing, resto em escala de app. */
+  --lw-text-hero:    clamp(56px, 12vw, 152px);
+  --lw-text-display: 40px;
+  --lw-text-h1:      32px;
+  --lw-text-h2:      24px;
+  --lw-text-h3:      20px;
+  --lw-text-body:    16px;
+  --lw-text-sm:      14px;
+  --lw-text-micro:   10px;
+
+  /* o tracking negativo apertado é metade da identidade — não perca isso */
+  --lw-tracking-hero:    -0.06em;
+  --lw-tracking-display: -0.03em;
+  --lw-tracking-tight:   -0.02em;
+  --lw-tracking-micro:    0.4px;  /* label mono, direto da extração */
+
+  --lw-leading-tight: 1.0;
+  --lw-leading-body:  1.4;
+
+  /* ---------- 7. ESPAÇAMENTO (grid de 4px, igual à extração) ---------- */
+  --lw-space-xs:  4px;
+  --lw-space-sm:  8px;
+  --lw-space-md:  12px;
+  --lw-space-lg:  16px;
+  --lw-space-xl:  24px;
+  --lw-space-2xl: 48px;
+  --lw-space-3xl: 88px;
+  --lw-space-section: 180px;  /* ⚠ só landing. Dentro do app isso é absurdo */
+
+  /* ---------- 8. FORMA ----------
+     A extração tem UM raio só: 4px. E o guia diz explicitamente para não
+     misturar cantos arredondados com retos na mesma tela. Respeite. */
+  --lw-radius: 4px;
+
+  /* ---------- 9. FOCO (valores da própria extração) ---------- */
+  --lw-focus-width:  3px;
+  --lw-focus-offset: 0px;
+  --lw-focus-color:  var(--lw-off-white);
+
+  /* ---------- 10. MOVIMENTO ---------- */
+  --lw-blur-nav: 6px;                              /* backdrop do menu */
+  --lw-ease:     cubic-bezier(0.16, 1, 0.3, 1);
+  --lw-dur-fast: 150ms;
+  --lw-dur:      300ms;
+  --lw-dur-slow: 600ms;
+}
+
+/* Sem barra de rolagem visível (parte do visual da referência).
+   O preço é o usuário perder a noção de posição na página — por isso a
+   barra de progresso no topo deixa de ser enfeite e vira necessária. */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* Quem pediu menos movimento, recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lw-dur-fast: 0ms;
+    --lw-dur:      0ms;
+    --lw-dur-slow: 0ms;
+  }
+}

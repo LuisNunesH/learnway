@@ -1,0 +1,703 @@
+/* ============================================================
+   LearnWay — estilos globais (sistema "Papel")
+
+   Papel quente, tinta preta, títulos em serifa, prosa em serifa de
+   leitura, UI em grotesca, micro-labels em mono caixa-alta.
+   Profundidade = espaço em branco + fio de 1px. Sombra só em coisa
+   que FLUTUA (menu, drawer, toast). Um acento terracota por tela.
+
+   Valores: src/styles/_tokens.css (--lw-*). Aqui só se USAM tokens.
+   ============================================================ */
+
+/* ============================================================
+   PONTE DE COMPATIBILIDADE (nomes semânticos legados -> papel)
+   Telas ainda não reescritas pedem --color-* / --surface-* / --radius-*.
+   Aqui esses nomes passam a apontar para o sistema editorial, então o
+   app inteiro vira claro sem hex solto. Tela reescrita usa --lw-* direto.
+   ============================================================ */
+:root {
+  /* superfícies */
+  --surface-0: var(--lw-paper);
+  --surface-1: var(--lw-paper-raised);
+  --surface-2: var(--lw-paper-sunken);
+  --surface-3: var(--lw-paper-deep);
+  --surface-glass: var(--lw-paper-raised);
+
+  --color-bg-dark:    var(--lw-paper);
+  --color-bg-card:    var(--lw-paper-raised);
+  --color-bg-surface: var(--lw-paper-sunken);
+  --color-bg-topbar:  var(--lw-paper-veil);
+
+  --color-border:  var(--lw-rule);
+  --border-glow:   var(--lw-rule-strong);
+  --card-edge:     transparent;
+
+  /* texto */
+  --color-text-primary: var(--lw-ink);
+  --color-text-muted:   var(--lw-ink-muted);
+  --color-text-faint:   var(--lw-ink-faint);
+
+  /* marca / semânticos */
+  --color-primary:        var(--lw-accent);
+  --color-primary-soft:   var(--lw-accent-wash);
+  --color-primary-ink:    var(--lw-accent-deep);
+  --color-secondary:      var(--lw-eval-correct);
+  --color-secondary-soft: var(--lw-eval-correct-bg);
+  --color-accent:         var(--lw-eval-wrong);
+  --color-accent-soft:    var(--lw-eval-wrong-bg);
+  --color-warning:        var(--lw-eval-partial);
+  --color-warning-soft:   var(--lw-eval-partial-bg);
+  --color-violet:         var(--lw-level);
+  --color-violet-ink:     var(--lw-level);
+  --color-violet-soft:    var(--lw-level-bg);
+
+  /* tinta que vai POR CIMA de um sólido colorido */
+  --on-flame: var(--lw-on-color);
+  --on-mint:  var(--lw-on-color);
+
+  /* fontes */
+  --font-display: var(--lw-font-display);
+  --font-body:    var(--lw-font-ui);
+  --font-mono:    var(--lw-font-mono);
+
+  /* escala tipográfica */
+  --text-display-1: var(--lw-text-display); --leading-display-1: 1.08;
+  --text-display-2: var(--lw-text-h1);      --leading-display-2: 1.12;
+  --text-h1: var(--lw-text-h1);   --leading-h1: 1.14;
+  --text-h2: var(--lw-text-h2);   --leading-h2: 1.2;
+  --text-h3: var(--lw-text-h3);   --leading-h3: 1.3;
+  --text-body-lg: 17px;                --leading-body-lg: 1.7;
+  --text-body: var(--lw-text-body);    --leading-body: 1.6;
+  --text-body-sm: var(--lw-text-sm);   --leading-body-sm: 1.55;
+  --text-caption: var(--lw-text-micro);
+  --tracking-tight: var(--lw-tracking-tight);
+  --tracking-label: var(--lw-tracking-micro);
+
+  /* espaçamento */
+  --space-3xs: 2px;
+  --space-2xs: var(--lw-space-xs);
+  --space-xs:  var(--lw-space-sm);
+  --space-sm:  var(--lw-space-md);
+  --space-md:  var(--lw-space-lg);
+  --space-lg:  var(--lw-space-xl);
+  --space-xl:  40px;
+  --space-2xl: var(--lw-space-2xl);
+  --space-3xl: var(--lw-space-3xl);
+
+  /* raios */
+  --radius-xs:   var(--lw-radius-sm);
+  --radius-sm:   var(--lw-radius-sm);
+  --radius-md:   var(--lw-radius);
+  --radius-lg:   var(--lw-radius);
+  --radius-xl:   var(--lw-radius-lg);
+  --radius-pill: 999px;
+  --radius-card: var(--lw-radius);
+  --radius-btn:  var(--lw-radius-sm);
+
+  /* motion */
+  --ease-standard: var(--lw-ease);
+  --ease-spring:   var(--lw-ease-out);
+  --dur-fast: var(--lw-dur-fast);
+  --dur-base: var(--lw-dur);
+  --dur-slow: var(--lw-dur-slow);
+
+  /* profundidade: o legado pedia brilho; aqui vira elevação de papel */
+  --shadow-pop: var(--lw-lift);
+  --glow-primary-sm: none;
+  --glow-primary: none;
+  --glow-secondary: none;
+  --glow-accent: none;
+  --glow-violet: none;
+  --halo-primary: none;
+
+  /* degradês -> tinta sólida */
+  --gradient-cta:   var(--lw-accent);
+  --gradient-flame: var(--lw-accent);
+  --gradient-mint:  var(--lw-eval-correct);
+  --gradient-text:  var(--lw-ink);
+
+  --md-code-ink:  var(--lw-accent-deep);
+  --md-quote-ink: var(--lw-ink);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+/* `min-height`, NUNCA `height: 100%` no body: com altura fixa o body mede
+   exatamente UMA janela e o conteúdo transborda dele. Como app-root/lw-shell
+   são hosts inline, o bloco de contenção de qualquer `position: sticky`
+   resolve até o body — e um sticky nunca sai do seu bloco de contenção, então
+   cabeçalho e sumário grudavam só na primeira janela de rolagem (~900px) e
+   depois iam embora com ela. Com `min-height` o body cresce com o conteúdo. */
+html { height: 100%; }
+body { min-height: 100%; }
+html { background: var(--lw-paper); }
+
+body {
+  margin: 0;
+  background: var(--lw-paper);
+  color: var(--lw-ink);
+  font-family: var(--lw-font-ui);
+  font-size: var(--lw-text-body);
+  line-height: var(--lw-leading-body);
+  letter-spacing: var(--lw-tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Título é serifa. Esta é a decisão que dá o tom do sistema inteiro. */
+h1, h2, h3, h4 {
+  font-family: var(--lw-font-display);
+  font-variation-settings: var(--lw-display-variation);
+  font-weight: 600;
+  line-height: var(--lw-leading-tight);
+  letter-spacing: var(--lw-tracking-tight);
+  color: var(--lw-ink);
+  margin: 0;
+}
+
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+::selection { background: var(--lw-accent-wash); color: var(--lw-accent-deep); }
+
+:focus-visible {
+  outline: var(--lw-focus-width) solid var(--lw-focus-color);
+  outline-offset: var(--lw-focus-offset);
+  border-radius: var(--lw-radius-sm);
+}
+.input:focus-visible { outline: none; }
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--lw-rule-strong);
+  border: 3px solid var(--lw-paper);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--lw-ink-faint); }
+
+/* ============================================================
+   VOZES TIPOGRÁFICAS
+   ============================================================ */
+
+/* Micro-label mono: a assinatura, herdada do sistema anterior. */
+.term-label,
+.lw-label,
+.eyebrow {
+  display: inline-block;
+  font-family: var(--lw-font-mono);
+  font-size: var(--lw-text-micro);
+  font-weight: 500;
+  letter-spacing: var(--lw-tracking-micro);
+  text-transform: uppercase;
+  color: var(--lw-ink-faint);
+}
+
+.mono { font-family: var(--lw-font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--lw-ink-muted); }
+.faint { color: var(--lw-ink-faint); }
+
+/* Serifa de display, para números grandes e títulos fora de h1..h4. */
+.display {
+  font-family: var(--lw-font-display);
+  font-variation-settings: var(--lw-display-variation);
+  letter-spacing: var(--lw-tracking-display);
+  line-height: var(--lw-leading-tight);
+}
+
+/* Numeral editorial: serifa, tabular, para XP/streak/contadores. */
+.numeral {
+  font-family: var(--lw-font-display);
+  font-variation-settings: "SOFT" 20, "WONK" 0;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: var(--lw-tracking-display);
+}
+
+/* Prosa: serifa de leitura, medida limitada. */
+.prose {
+  font-family: var(--lw-font-prose);
+  font-size: 17px;
+  line-height: var(--lw-leading-prose);
+}
+.measure { max-width: var(--lw-measure); }
+
+/* Sem degradê de texto: tinta sólida (mantém o seletor vivo). */
+.text-gradient {
+  color: var(--lw-ink);
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Régua: o elemento estrutural do sistema. */
+.rule { border: none; border-top: 1px solid var(--lw-rule); margin: var(--lw-space-xl) 0; }
+.rule--hair { border-top-color: var(--lw-rule-hair); }
+
+/* ============================================================
+   CARDS — folha sobre papel: fio + fundo, nunca sombra.
+   ============================================================ */
+.card {
+  background: var(--lw-paper-raised);
+  border: 1px solid var(--lw-rule);
+  border-radius: var(--lw-radius);
+  padding: var(--lw-space-xl);
+  transition: border-color var(--lw-dur-fast) var(--lw-ease),
+              background var(--lw-dur-fast) var(--lw-ease),
+              transform var(--lw-dur-fast) var(--lw-ease);
+}
+.card--glow { border-color: var(--lw-rule-strong); }
+.card--hover:hover { border-color: var(--lw-ink-faint); }
+
+/* Card clicável: sobe 1px e o fio escurece. Papel sendo levantado. */
+a.card, button.card { display: block; cursor: pointer; }
+a.card:hover, button.card:hover {
+  border-color: var(--lw-ink-faint);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   BOTÕES — o primário é o único terracota da tela.
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lw-space-sm);
+  padding: 10px 18px;
+  min-height: 40px;
+  border-radius: var(--lw-radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--lw-font-ui);
+  font-size: var(--lw-text-sm);
+  font-weight: 550;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background var(--lw-dur-fast) var(--lw-ease),
+              border-color var(--lw-dur-fast) var(--lw-ease),
+              color var(--lw-dur-fast) var(--lw-ease),
+              opacity var(--lw-dur-fast) var(--lw-ease);
+  white-space: nowrap;
+
+  &:disabled { opacity: 0.42; cursor: not-allowed; }
+}
+
+.btn--primary {
+  background: var(--lw-accent);
+  color: var(--lw-on-color);
+  &:not(:disabled):hover { background: var(--lw-accent-deep); }
+}
+
+/* Secundário = tinta neutra contornada. */
+.btn--secondary {
+  background: var(--lw-paper-raised);
+  color: var(--lw-ink);
+  border-color: var(--lw-rule-strong);
+  &:not(:disabled):hover { background: var(--lw-paper-sunken); border-color: var(--lw-ink-faint); }
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--lw-ink-muted);
+  border-color: transparent;
+  &:not(:disabled):hover { color: var(--lw-ink); background: var(--lw-surface-nav); }
+}
+
+.btn--danger {
+  background: transparent;
+  color: var(--lw-eval-wrong);
+  border-color: var(--lw-eval-wrong-edge);
+  &:not(:disabled):hover { background: var(--lw-eval-wrong-bg); }
+}
+
+.btn--lg { padding: 13px 24px; min-height: 48px; font-size: var(--lw-text-body); }
+.btn--sm { padding: 6px 12px; min-height: 32px; font-size: 13px; }
+
+/* Link editorial: sublinhado fino que engorda no hover. */
+.link {
+  color: var(--lw-accent-deep);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-thickness var(--lw-dur-fast) var(--lw-ease);
+  &:hover { text-decoration-thickness: 2px; }
+}
+
+/* ============================================================
+   FORMULÁRIOS
+   ============================================================ */
+.field { display: flex; flex-direction: column; gap: var(--lw-space-sm); margin-bottom: var(--lw-space-lg); }
+
+.field label {
+  font-family: var(--lw-font-mono);
+  font-size: var(--lw-text-micro);
+  font-weight: 500;
+  letter-spacing: var(--lw-tracking-micro);
+  text-transform: uppercase;
+  color: var(--lw-ink-faint);
+}
+
+.input {
+  width: 100%;
+  background: var(--lw-paper-raised);
+  border: 1px solid var(--lw-rule-strong);
+  border-radius: var(--lw-radius-sm);
+  color: var(--lw-ink);
+  font-family: var(--lw-font-ui);
+  font-size: var(--lw-text-body);
+  padding: 11px 13px;
+  outline: none;
+  transition: border-color var(--lw-dur-fast) var(--lw-ease),
+              box-shadow var(--lw-dur-fast) var(--lw-ease);
+
+  &::placeholder { color: var(--lw-ink-faint); }
+  &:hover { border-color: var(--lw-ink-faint); }
+  &:focus {
+    border-color: var(--lw-accent);
+    box-shadow: 0 0 0 3px var(--lw-accent-wash);
+  }
+}
+
+textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
+
+.field-error {
+  font-family: var(--lw-font-mono);
+  font-size: var(--lw-text-micro);
+  letter-spacing: var(--lw-tracking-micro);
+  text-transform: uppercase;
+  color: var(--lw-eval-wrong);
+}
+
+/* ============================================================
+   CHIPS / BADGES — mono caixa-alta sobre wash de tinta.
+   ============================================================ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lw-space-xs);
+  padding: 4px 9px;
+  border-radius: var(--lw-radius-sm);
+  font-family: var(--lw-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: var(--lw-tracking-micro);
+  text-transform: uppercase;
+  background: var(--lw-paper-sunken);
+  border: 1px solid var(--lw-rule);
+  color: var(--lw-ink-muted);
+  white-space: nowrap;
+}
+
+.chip--primary { background: var(--lw-accent-wash);       color: var(--lw-accent-deep);   border-color: var(--lw-accent-edge); }
+.chip--success { background: var(--lw-eval-correct-bg);   color: var(--lw-eval-correct);  border-color: var(--lw-eval-correct-edge); }
+.chip--danger  { background: var(--lw-eval-wrong-bg);     color: var(--lw-eval-wrong);    border-color: var(--lw-eval-wrong-edge); }
+.chip--warning { background: var(--lw-eval-partial-bg);   color: var(--lw-eval-partial);  border-color: var(--lw-eval-partial-edge); }
+.chip--violet  { background: var(--lw-level-bg);          color: var(--lw-level);         border-color: var(--lw-level-edge); }
+
+/* ============================================================
+   ANIMAÇÕES
+   ============================================================ */
+@keyframes lw-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes lw-pulse { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+@keyframes lw-pop { 0% { transform: scale(0.97) translateY(4px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+@keyframes lw-fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lw-spin { to { transform: rotate(360deg); } }
+@keyframes lw-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes lw-crystal-alarm {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(1.05); }
+}
+@keyframes lw-confetti-fall {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--cf-x), var(--cf-y)) rotate(var(--cf-r)); opacity: 0; }
+}
+/* "pending": pulso de tinta — movimento, não cor. */
+@keyframes lw-halo-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(25, 23, 20, 0.16); }
+  50%      { box-shadow: 0 0 0 9px rgba(25, 23, 20, 0); }
+}
+/* Entrada de rota: a página sobe como uma folha sendo posta na mesa. */
+@keyframes lw-page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Régua que se desenha da esquerda para a direita. */
+@keyframes lw-rule-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.anim-shake { animation: lw-shake 0.4s var(--lw-ease); }
+.anim-pulse { animation: lw-pulse 0.45s var(--lw-ease); }
+.anim-pop   { animation: lw-pop var(--lw-dur-fast) var(--lw-ease-out); }
+/* `backwards`, não `both`: cobre o atraso do stagger sem reter o estado final
+   da keyframe — com `both` o elemento fica com um transform permanente, que
+   cria contexto de empilhamento e bloco de contenção sem necessidade. */
+.anim-fade-up { animation: lw-fade-up var(--lw-dur-slow) var(--lw-ease-out) backwards; }
+.anim-halo-pulse { animation: lw-halo-pulse 2s var(--lw-ease) infinite; }
+
+.stagger > .anim-fade-up:nth-child(1) { animation-delay: 0ms; }
+.stagger > .anim-fade-up:nth-child(2) { animation-delay: 50ms; }
+.stagger > .anim-fade-up:nth-child(3) { animation-delay: 100ms; }
+.stagger > .anim-fade-up:nth-child(4) { animation-delay: 150ms; }
+.stagger > .anim-fade-up:nth-child(5) { animation-delay: 200ms; }
+.stagger > .anim-fade-up:nth-child(6) { animation-delay: 250ms; }
+.stagger > .anim-fade-up:nth-child(7) { animation-delay: 300ms; }
+.stagger > .anim-fade-up:nth-child(8) { animation-delay: 350ms; }
+
+/* ============================================================
+   MARKDOWN (teoria / lições) — aqui mora a serifa de leitura.
+   ============================================================ */
+.md {
+  font-family: var(--lw-font-prose);
+  font-size: 17px;
+  line-height: var(--lw-leading-prose);
+  color: var(--lw-ink);
+
+  h1, h2, h3 {
+    font-family: var(--lw-font-display);
+    font-variation-settings: var(--lw-display-variation);
+    letter-spacing: var(--lw-tracking-tight);
+    margin: 2em 0 0.6em;
+  }
+  h1 { font-size: var(--lw-text-h2); }
+  h2 { font-size: 22px; padding-bottom: 0.35em; border-bottom: 1px solid var(--lw-rule); }
+  h3 { font-size: var(--lw-text-h3); }
+  h2:first-child, h1:first-child { margin-top: 0; }
+
+  p { margin: 0 0 1.1em; }
+  ul, ol { margin: 0 0 1.1em; padding-left: 1.4em; }
+  li { margin-bottom: 0.4em; }
+  li::marker { color: var(--lw-ink-faint); }
+  strong { font-weight: 650; color: var(--lw-ink); }
+  em { font-style: italic; }
+
+  a {
+    color: var(--lw-accent-deep);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  code {
+    font-family: var(--lw-font-mono);
+    font-size: 0.85em;
+    background: var(--lw-paper-sunken);
+    border: 1px solid var(--lw-rule);
+    border-radius: var(--lw-radius-sm);
+    padding: 0.1em 0.4em;
+    color: var(--md-code-ink);
+  }
+
+  /* Bloco de código: papel rebaixado, não slab preto. */
+  pre {
+    position: relative;
+    background: var(--lw-code-bg);
+    border: 1px solid var(--lw-rule);
+    border-radius: var(--lw-radius);
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 1.4em;
+
+    code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--lw-code-ink);
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+  }
+
+  pre[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 3px 10px;
+    border-left: 1px solid var(--lw-rule);
+    border-bottom: 1px solid var(--lw-rule);
+    border-radius: 0 var(--lw-radius) 0 var(--lw-radius);
+    background: var(--lw-paper-sunken);
+    color: var(--lw-ink-faint);
+    font-family: var(--lw-font-mono);
+    font-size: 10px;
+    letter-spacing: var(--lw-tracking-micro);
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  pre[data-lang] { padding-top: 28px; }
+
+  pre code {
+    .hl-cmt   { color: var(--lw-code-cmt); font-style: italic; }
+    .hl-kw    { color: var(--lw-code-kw); font-weight: 600; }
+    .hl-lit   { color: var(--lw-code-kw); font-weight: 600; }
+    .hl-mod   { color: var(--lw-code-kw); }
+    .hl-ann   { color: var(--lw-code-ann); }
+    .hl-type  { color: var(--lw-code-type); }
+    .hl-def   { color: var(--lw-code-ink); font-weight: 600; }
+    .hl-prop  { color: var(--lw-code-type); }
+    .hl-var   { color: var(--lw-code-ink); }
+    .hl-str   { color: var(--lw-code-str); }
+    .hl-num   { color: var(--lw-code-num); }
+    .hl-op    { color: var(--lw-code-punct); }
+    .hl-punct { color: var(--lw-code-punct); }
+  }
+
+  /* Citação editorial: régua vertical fina, itálico, sem caixa. */
+  blockquote {
+    margin: 0 0 1.4em;
+    padding: 0.15em 0 0.15em 1.2em;
+    border-left: 2px solid var(--lw-accent);
+    background: none;
+    color: var(--md-quote-ink);
+    font-style: italic;
+
+    p:last-child { margin-bottom: 0; }
+  }
+
+  table {
+    border-collapse: collapse;
+    margin-bottom: 1.4em;
+    width: 100%;
+    font-family: var(--lw-font-ui);
+    font-size: var(--lw-text-sm);
+
+    th, td { border-bottom: 1px solid var(--lw-rule); padding: 9px 12px; text-align: left; }
+    th {
+      font-family: var(--lw-font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: var(--lw-tracking-micro);
+      color: var(--lw-ink-faint);
+      border-bottom-color: var(--lw-rule-strong);
+    }
+    tr:last-child td { border-bottom: none; }
+  }
+
+  hr { border: none; border-top: 1px solid var(--lw-rule); margin: 2em 0; }
+
+  img { max-width: 100%; border-radius: var(--lw-radius); }
+}
+
+/* ============================================================
+   CÓDIGO — valores em _tokens.css (--lw-code-*).
+   ============================================================ */
+.cm-editor {
+  background: var(--lw-code-bg);
+  border: 1px solid var(--lw-rule-strong);
+  border-radius: var(--lw-radius);
+  font-family: var(--lw-font-mono);
+  font-size: 13.5px;
+  overflow: hidden;
+  transition: border-color var(--lw-dur-fast) var(--lw-ease),
+              box-shadow var(--lw-dur-fast) var(--lw-ease);
+
+  &.cm-focused {
+    outline: none;
+    border-color: var(--lw-accent);
+    box-shadow: 0 0 0 3px var(--lw-accent-wash);
+  }
+  .cm-gutters {
+    background: var(--lw-paper-sunken);
+    border-right: 1px solid var(--lw-rule);
+    color: var(--lw-ink-faint);
+  }
+  .cm-activeLine { background: rgba(176, 71, 43, 0.05); }
+  .cm-activeLineGutter { background: rgba(176, 71, 43, 0.07); color: var(--lw-ink-muted); }
+  .cm-content { padding: 12px 0; caret-color: var(--lw-accent); color: var(--lw-code-ink); }
+  .cm-cursor { border-left-color: var(--lw-accent); border-left-width: 2px; }
+  .cm-selectionBackground { background: rgba(176, 71, 43, 0.18) !important; }
+  .cm-matchingBracket { background: rgba(47, 107, 69, 0.18); outline: none; }
+}
+
+/* ============================================================
+   SKELETON
+   ============================================================ */
+@keyframes lw-shimmer {
+  0%   { opacity: 0.55; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.55; }
+}
+.skeleton {
+  border-radius: var(--lw-radius);
+  background: var(--lw-paper-sunken);
+  border: 1px solid var(--lw-rule-hair);
+  animation: lw-shimmer 1.5s infinite ease-in-out;
+}
+
+/* ============================================================
+   PÁGINA — o respiro é o produto.
+   ============================================================ */
+.page {
+  max-width: var(--lw-page-width);
+  margin: 0 auto;
+  padding: var(--lw-space-2xl) var(--lw-space-xl) var(--lw-space-3xl);
+
+  /* `backwards`, NUNCA `both`: com `both` o estado final da keyframe fica
+     retido e a página herda um `transform: translateY(0)` permanente, que
+     vira bloco de contenção e atrapalha `position: sticky` lá dentro.
+     Sem atraso, `backwards` dá exatamente a mesma entrada visual. */
+  animation: lw-page-in var(--lw-dur) var(--lw-ease-out) backwards;
+}
+
+.page--narrow { max-width: var(--lw-page-narrow); }
+
+.page-title {
+  font-family: var(--lw-font-display);
+  font-variation-settings: var(--lw-display-variation);
+  font-size: var(--lw-text-h1);
+  font-weight: 600;
+  line-height: var(--lw-leading-tight);
+  letter-spacing: var(--lw-tracking-display);
+  margin: var(--lw-space-sm) 0 var(--lw-space-xs);
+}
+
+.page-subtitle {
+  font-family: var(--lw-font-prose);
+  color: var(--lw-ink-muted);
+  font-size: 17px;
+  line-height: 1.55;
+  margin-bottom: var(--lw-space-xl);
+  max-width: 60ch;
+}
+
+/* Cabeçalho de página com régua embaixo — o gesto editorial padrão. */
+.page-head {
+  padding-bottom: var(--lw-space-lg);
+  border-bottom: 1px solid var(--lw-rule);
+  margin-bottom: var(--lw-space-xl);
+
+  .page-subtitle { margin-bottom: 0; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: var(--lw-space-xl) var(--lw-space-lg) var(--lw-space-2xl); }
+  .page-title { font-size: 27px; }
+  .page-subtitle { font-size: var(--lw-text-body); }
+  .md { font-size: 16px; }
+}
+
+/* ============================================================
+   prefers-reduced-motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

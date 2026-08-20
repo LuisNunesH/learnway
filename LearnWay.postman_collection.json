@@ -1,0 +1,422 @@
+{
+  "info": {
+    "name": "LearnWay API",
+    "description": "Coleção completa da API LearnWay. Configure a variável `baseUrl` (padrão: http://localhost:8080) e o token JWT em `accessToken` após o login.\n\nFluxo básico:\n1. Auth / Register → cria conta\n2. Auth / Login → salva o `accessToken` retornado em `accessToken`\n3. Use qualquer outro endpoint normalmente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:8080",  "type": "string" },
+    { "key": "accessToken",  "value": "",                       "type": "string" },
+    { "key": "refreshToken", "value": "",                       "type": "string" },
+    { "key": "topicId",      "value": "",                       "type": "string" },
+    { "key": "subtopicId",   "value": "",                       "type": "string" },
+    { "key": "lessonId",     "value": "",                       "type": "string" },
+    { "key": "questionId",   "value": "",                       "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"devjava\",\n  \"email\": \"devjava@learnway.com\",\n  \"password\": \"Senha@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usernameOrEmail\": \"devjava\",\n  \"password\": \"Senha@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","auth","refresh"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "List Topics (trilhas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length > 0) pm.collectionVariables.set('topicId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/topics", "host": ["{{baseUrl}}"], "path": ["api","topics"] }
+          }
+        },
+        {
+          "name": "List Subtopics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length > 0) pm.collectionVariables.set('subtopicId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/topics/{{topicId}}/subtopics", "host": ["{{baseUrl}}"], "path": ["api","topics","{{topicId}}","subtopics"] }
+          }
+        },
+        {
+          "name": "List Lessons",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length > 0) pm.collectionVariables.set('lessonId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/subtopics/{{subtopicId}}/lessons", "host": ["{{baseUrl}}"], "path": ["api","subtopics","{{subtopicId}}","lessons"] }
+          }
+        },
+        {
+          "name": "Get Lesson Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.questions && body.questions.length > 0) {",
+                  "    pm.collectionVariables.set('questionId', body.questions[0].id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/lessons/{{lessonId}}", "host": ["{{baseUrl}}"], "path": ["api","lessons","{{lessonId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "item": [
+        {
+          "name": "Get Trail Map",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/progress/trail", "host": ["{{baseUrl}}"], "path": ["api","progress","trail"] }
+          }
+        },
+        {
+          "name": "Start Lesson",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/progress/lesson/{{lessonId}}/start", "host": ["{{baseUrl}}"], "path": ["api","progress","lesson","{{lessonId}}","start"] }
+          }
+        },
+        {
+          "name": "Answer Question – Multiple Choice",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"selectedOptionId\": \"<uuid-da-opcao>\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/progress/question/{{questionId}}/answer", "host": ["{{baseUrl}}"], "path": ["api","progress","question","{{questionId}}","answer"] }
+          }
+        },
+        {
+          "name": "Answer Question – Descriptive",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"textAnswer\": \"Encapsulamento é o princípio de esconder os detalhes internos de um objeto, expondo apenas o que é necessário por meio de métodos públicos (getters/setters), protegendo a integridade dos dados.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/progress/question/{{questionId}}/answer", "host": ["{{baseUrl}}"], "path": ["api","progress","question","{{questionId}}","answer"] }
+          }
+        },
+        {
+          "name": "Answer Question – Code Challenge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeAnswer\": \"public class Solucao {\\n  public static void main(String[] args) {\\n    Animal a = new Cachorro();\\n    a.fazerSom();\\n  }\\n}\\nclass Animal { void fazerSom() { System.out.println(\\\"Som genérico\\\"); } }\\nclass Cachorro extends Animal { @Override void fazerSom() { System.out.println(\\\"Au au!\\\"); } }\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/progress/question/{{questionId}}/answer", "host": ["{{baseUrl}}"], "path": ["api","progress","question","{{questionId}}","answer"] }
+          }
+        },
+        {
+          "name": "Complete Lesson",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/progress/lesson/{{lessonId}}/complete", "host": ["{{baseUrl}}"], "path": ["api","progress","lesson","{{lessonId}}","complete"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews (SM-2)",
+      "item": [
+        {
+          "name": "List Due Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reviews/due", "host": ["{{baseUrl}}"], "path": ["api","reviews","due"] }
+          }
+        },
+        {
+          "name": "Complete Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quality\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "quality: 0-5 (SM-2)\n0 = Blackout completo\n1 = Erro grave\n2 = Errou mas reconheceu a resposta\n3 = Acertou com dificuldade (threshold mínimo para avançar)\n4 = Acertou após hesitação\n5 = Perfeito, resposta imediata",
+            "url": { "raw": "{{baseUrl}}/api/reviews/{{lessonId}}/complete", "host": ["{{baseUrl}}"], "path": ["api","reviews","{{lessonId}}","complete"] }
+          }
+        },
+        {
+          "name": "Review Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reviews/stats", "host": ["{{baseUrl}}"], "path": ["api","reviews","stats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Start Session",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/sessions/start", "host": ["{{baseUrl}}"], "path": ["api","sessions","start"] }
+          }
+        },
+        {
+          "name": "Session Heartbeat",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/sessions/heartbeat", "host": ["{{baseUrl}}"], "path": ["api","sessions","heartbeat"] }
+          }
+        },
+        {
+          "name": "End Session",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/sessions/end", "host": ["{{baseUrl}}"], "path": ["api","sessions","end"] }
+          }
+        },
+        {
+          "name": "Session Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/sessions/stats", "host": ["{{baseUrl}}"], "path": ["api","sessions","stats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI (Gemini)",
+      "item": [
+        {
+          "name": "Evaluate Descriptive Answer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"{{questionId}}\",\n  \"answer\": \"Herança permite que uma classe filha reutilize código da classe pai. Polimorfismo permite que um mesmo método se comporte de formas diferentes dependendo do objeto que o invoca, tipicamente usando @Override.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ai/evaluate-descriptive", "host": ["{{baseUrl}}"], "path": ["api","ai","evaluate-descriptive"] }
+          }
+        },
+        {
+          "name": "Evaluate Code Challenge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"{{questionId}}\",\n  \"code\": \"public class Solucao {\\n  public static void main(String[] args) {\\n    Animal a = new Cachorro();\\n    a.fazerSom();\\n  }\\n}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ai/evaluate-code", "host": ["{{baseUrl}}"], "path": ["api","ai","evaluate-code"] }
+          }
+        },
+        {
+          "name": "Ask AI (chat contextual)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": \"{{lessonId}}\",\n  \"question\": \"Qual a diferença prática entre sobrecarga (overload) e sobreposição (override) em Java?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ai/ask", "host": ["{{baseUrl}}"], "path": ["api","ai","ask"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gamification",
+      "item": [
+        {
+          "name": "Weekly Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/leaderboard/weekly", "host": ["{{baseUrl}}"], "path": ["api","leaderboard","weekly"] }
+          }
+        },
+        {
+          "name": "All Achievements (catálogo + status)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/achievements", "host": ["{{baseUrl}}"], "path": ["api","achievements"] }
+          }
+        },
+        {
+          "name": "My Achievements (desbloqueadas)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/achievements/my", "host": ["{{baseUrl}}"], "path": ["api","achievements","my"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "My Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/profile/me", "host": ["{{baseUrl}}"], "path": ["api","users","profile","me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator","health"] }
+          }
+        }
+      ]
+    }
+  ]
+}

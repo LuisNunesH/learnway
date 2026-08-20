@@ -1,0 +1,72 @@
+# Stack que roda na VM da Oracle Cloud.
+#
+# Dois contêineres: a API e um proxy reverso (Caddy) que resolve HTTPS sozinho.
+# O HTTPS não é luxo aqui — o frontend fica no Cloudflare Pages, que serve por
+# HTTPS, e o navegador BLOQUEIA uma página https chamando uma API http
+# ("mixed content"). Sem TLS no backend, o app publicado simplesmente não
+# funcionaria.
+#
+# Este arquivo vive em ~/learnway/docker-compose.yml na VM.
+# O deploy só faz: docker compose pull && docker compose up -d
+
+services:
+  api:
+    # A tag é injetada pelo workflow (arquivo .env ao lado deste).
+    image: ${API_IMAGE}
+    container_name: learnway-api
+    restart: unless-stopped
+
+    # Publicada SÓ no loopback da VM. O "127.0.0.1:" na frente é o que importa:
+    # sem ele, o Docker abriria a 8080 para a internet inteira, furando o
+    # firewall (o Docker escreve regras de iptables por baixo do ufw). Assim o
+    # acesso externo passa obrigatoriamente pelo Caddy com TLS, e ainda dá para
+    # depurar de dentro da VM com `curl localhost:8080`.
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    env_file:
+      - ./api.env
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      # A app leva alguns segundos para subir; até lá o healthcheck não conta
+      # como falha (é o que start_period faz).
+      start_period: 90s
+      timeout: 5s
+      retries: 3
+
+    # A VM tem 24 GB, mas limitar evita que um vazamento de memória derrube o
+    # host inteiro junto.
+    mem_limit: 2g
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: learnway-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"     # necessária mesmo em HTTPS: é por ela que o Let's Encrypt valida
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Os certificados vivem aqui. Sem este volume, cada restart pediria
+      # certificado novo e você bateria no limite do Let's Encrypt.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

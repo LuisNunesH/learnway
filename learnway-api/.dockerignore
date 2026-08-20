@@ -1,0 +1,17 @@
+# Segredos: o .env NUNCA entra na imagem. Em produção as variáveis vêm do
+# Cloud Run, e LearnwayApplication.loadDotEnv() já dá prioridade a elas.
+.env
+.env.*
+!.env.example
+
+# Artefatos de build locais — a imagem compila do zero.
+target/
+
+# Ruído que só engorda o contexto enviado ao daemon do Docker.
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+*.log
+README.md

@@ -1,0 +1,9 @@
+# SPA fallback do Cloudflare Pages.
+#
+# O roteamento do Angular é do lado do cliente: /trilha, /perfil e /licao/:id
+# não existem como arquivos. Sem esta regra, abrir um link direto (ou dar F5
+# dentro do app) devolve 404 — só a raiz funcionaria.
+#
+# O código 200 é reescrita, não redirecionamento: a URL na barra continua a
+# original e o Angular assume o roteamento a partir dela.
+/*    /index.html    200
