@@ -68,6 +68,24 @@ server:
   # contêiner escute exatamente nela. Com 8080 fixo o app sobe mas o roteador
   # não o encontra, e o deploy falha por health check.
   port: ${PORT:8080}
+
+  # Confia nos cabeçalhos X-Forwarded-* de quem está na frente (o Caddy).
+  #
+  # Sem isto o Spring monta as URLs absolutas a partir do que ELE enxerga — e o
+  # que chega ao contêiner é HTTP simples, porque o TLS termina no proxy. O
+  # sintoma é específico e difícil de ligar à causa: o login com Google morre em
+  #
+  #     Erro 400: redirect_uri_mismatch
+  #
+  # porque a app envia redirect_uri=http://... enquanto o console do Google tem
+  # https://... cadastrado — e, para o OAuth, esquema diferente é URL diferente.
+  #
+  # O padrão do Spring é ignorar esses cabeçalhos, e está certo: qualquer
+  # cliente pode forjá-los. Só é seguro confiar porque a 8080 está publicada
+  # apenas no loopback da VM (ver deploy/docker-compose.yml), então o único
+  # caminho até aqui passa obrigatoriamente pelo Caddy.
+  forward-headers-strategy: framework
+
   error:
     include-message: always
     include-binding-errors: always
