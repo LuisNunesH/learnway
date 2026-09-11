@@ -1,0 +1,34 @@
+// Publicação do frontend na Cloudflare.
+//
+// O runbook original mandava criar um projeto no Cloudflare PAGES, que
+// descobria tudo sozinho pelos campos "Root directory" e "Build output
+// directory" do formulário. Esse fluxo não existe mais nesta conta: a
+// Cloudflare fundiu o Pages dentro do Workers, e a criação de projeto agora
+// pede um `wrangler deploy`. Daí este arquivo.
+//
+// Um Worker que só serve arquivos estáticos não precisa de código nenhum —
+// não há `main` aqui de propósito. Basta dizer de onde vêm os arquivos.
+{
+  "name": "learnway",
+  "compatibility_date": "2026-09-11",
+
+  "assets": {
+    // Relativo a ESTE arquivo, e não à raiz do repositório. Por isso o campo
+    // "Path" da tela da Cloudflare precisa apontar para /learnway-web: é de lá
+    // que o wrangler roda.
+    "directory": "./dist/learnway-web/browser",
+
+    // Faz o papel que o public/_redirects fazia no Pages: qualquer rota que
+    // não exista como arquivo devolve o index.html, e o roteador do Angular
+    // assume dali.
+    //
+    // Sem isto, /trilha, /perfil e /licao/:id só funcionariam navegando por
+    // dentro do app — abrir o link direto ou dar F5 devolveria 404, porque
+    // esses caminhos não existem como arquivo no disco.
+    //
+    // O public/_redirects continua versionado e não atrapalha: o Workers
+    // simplesmente o ignora, e ele volta a valer se um dia o projeto voltar
+    // para o Pages.
+    "not_found_handling": "single-page-application"
+  }
+}
