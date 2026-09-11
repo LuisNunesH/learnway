@@ -26,9 +26,15 @@
     // dentro do app — abrir o link direto ou dar F5 devolveria 404, porque
     // esses caminhos não existem como arquivo no disco.
     //
-    // O public/_redirects continua versionado e não atrapalha: o Workers
-    // simplesmente o ignora, e ele volta a valer se um dia o projeto voltar
-    // para o Pages.
+    // O antigo public/_redirects foi REMOVIDO por causa disto, e não por
+    // acaso: ao contrário do que se poderia supor, o Workers não ignora esse
+    // arquivo — ele valida, e recusa o deploy inteiro com
+    //
+    //     Line 9: Infinite loop detected in this rule
+    //
+    // porque a regra `/* -> /index.html 200` também casa com o próprio
+    // /index.html. No Pages essa regra era a solução; aqui ela duplica o que
+    // not_found_handling já faz, e as duas juntas quebram a publicação.
     "not_found_handling": "single-page-application"
   }
 }
