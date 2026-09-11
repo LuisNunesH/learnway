@@ -23,5 +23,5 @@
  */
 export const environment = {
   production: true,
-  apiOrigin: 'https://SUBSTITUA-PELO-SEU-DOMINIO',
+  apiOrigin: 'https://learnway-api.duckdns.org',
 };
