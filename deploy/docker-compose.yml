@@ -27,6 +27,20 @@ services:
     env_file:
       - ./api.env
 
+    environment:
+      # Repete os flags do Dockerfile porque JAVA_TOOL_OPTIONS é uma variável
+      # só: definir aqui SUBSTITUI o valor da imagem inteiro, não acrescenta.
+      #
+      # 60% de 720m dá ~430 MB de heap, e sobram ~290 MB para metaspace, code
+      # cache e pilhas de thread — que não entram no heap e são o que costuma
+      # estourar quando se olha só para o -Xmx. Na imagem o valor é 70, certo
+      # para uma máquina maior; aqui a margem precisa ser outra.
+      JAVA_TOOL_OPTIONS: >-
+        -XX:MaxRAMPercentage=60
+        -XX:+UseSerialGC
+        -Xss512k
+        -Djava.security.egd=file:/dev/./urandom
+
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
@@ -36,9 +50,14 @@ services:
       timeout: 5s
       retries: 3
 
-    # A VM tem 24 GB, mas limitar evita que um vazamento de memória derrube o
-    # host inteiro junto.
-    mem_limit: 2g
+    # A VM inteira tem 956 MB. O teto não é só higiene contra vazamento: é o
+    # número que a JVM lê para dimensionar o heap (MaxRAMPercentage). Deixar em
+    # 2g numa máquina de 1 GB faria a JVM planejar um heap que não existe, e o
+    # kernel mataria o processo antes de qualquer GC adiantar.
+    #
+    # 720m para a API, ~30m para o Caddy, ~200m para o sistema. O resto é a
+    # folga que o swap de 2 GB cobre nos picos.
+    mem_limit: 720m
 
     logging:
       driver: json-file

@@ -10,6 +10,15 @@
   background: transparent;
 }
 
+/* O alternador de tema flutua no canto: as telas de entrada não têm
+   cabeçalho onde encaixá-lo, e ele precisa existir ANTES do login. */
+.auth__theme {
+  position: absolute;
+  top: var(--lw-space-lg);
+  right: var(--lw-space-lg);
+  z-index: 2;
+}
+
 .auth__brand {
   position: relative;
   display: flex;

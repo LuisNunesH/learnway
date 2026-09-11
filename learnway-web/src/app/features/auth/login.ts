@@ -8,14 +8,17 @@ import { Icon } from '../../shared/icon';
 import { Spinner } from '../../shared/widgets';
 import { AuthArt } from './auth-art';
 import { SocialLogin } from './social-login';
+import { ThemeToggle } from '../../shared/theme-toggle';
 
 @Component({
   selector: 'lw-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, Icon, Spinner, SocialLogin, AuthArt],
+  imports: [FormsModule, RouterLink, Icon, Spinner, SocialLogin, AuthArt, ThemeToggle],
   styleUrl: './auth-shell.scss',
   template: `
     <div class="auth">
+      <lw-theme-toggle class="auth__theme" />
+
       <aside class="auth__brand">
         <div class="auth__logo"><lw-icon name="gem" [size]="20" /> LearnWay</div>
         <h1 class="auth__headline">Domine o <em>Java fullstack</em> uma lição por vez.</h1>

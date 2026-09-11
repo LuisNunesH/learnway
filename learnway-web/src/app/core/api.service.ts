@@ -52,6 +52,8 @@ export class ApiService {
   // ---------- sessões ----------
   startSession(): Observable<StudySession> { return this.http.post<StudySession>(`${API_URL}/sessions/start`, {}); }
   heartbeatSession(): Observable<StudySession> { return this.http.post<StudySession>(`${API_URL}/sessions/heartbeat`, {}); }
+  pauseSession(): Observable<StudySession> { return this.http.post<StudySession>(`${API_URL}/sessions/pause`, {}); }
+  resumeSession(): Observable<StudySession> { return this.http.post<StudySession>(`${API_URL}/sessions/resume`, {}); }
   endSession(): Observable<StudySession> { return this.http.post<StudySession>(`${API_URL}/sessions/end`, {}); }
   sessionStats(): Observable<SessionStats> { return this.http.get<SessionStats>(`${API_URL}/sessions/stats`); }
 

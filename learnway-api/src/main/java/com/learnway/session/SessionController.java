@@ -30,6 +30,18 @@ public class SessionController {
         return sessionService.heartbeat(SecurityUtils.currentUserId());
     }
 
+    @PostMapping("/pause")
+    @Operation(summary = "Pausa o cronômetro: o usuário saiu da tela")
+    public SessionDto pause() {
+        return sessionService.pause(SecurityUtils.currentUserId());
+    }
+
+    @PostMapping("/resume")
+    @Operation(summary = "Retoma o cronômetro de onde parou: o usuário voltou para a tela")
+    public SessionDto resume() {
+        return sessionService.resume(SecurityUtils.currentUserId());
+    }
+
     @PostMapping("/end")
     @Operation(summary = "Encerra a sessão aberta e calcula a duração")
     public SessionDto end() {

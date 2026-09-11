@@ -4,16 +4,23 @@
    Papel quente, tinta preta, títulos em serifa, prosa em serifa de
    leitura, UI em grotesca, micro-labels em mono caixa-alta.
    Profundidade = espaço em branco + fio de 1px. Sombra só em coisa
-   que FLUTUA (menu, drawer, toast). Um acento terracota por tela.
+   que FLUTUA (menu, drawer, toast). Um acento por tela.
 
    Valores: src/styles/_tokens.css (--lw-*). Aqui só se USAM tokens.
+
+   Nada aqui sabe qual tema está ativo. O tema escuro ("Nanquim":
+   preto quente + acento vermelho) troca os VALORES em
+   :root[data-theme="dark"] e todo este arquivo acompanha de graça —
+   e é exatamente por isso que cor literal não pode voltar a aparecer
+   aqui: um hex solto é um pedaço de tela que não troca de tema.
    ============================================================ */
 
 /* ============================================================
-   PONTE DE COMPATIBILIDADE (nomes semânticos legados -> papel)
+   PONTE DE COMPATIBILIDADE (nomes semânticos legados -> editorial)
    Telas ainda não reescritas pedem --color-* / --surface-* / --radius-*.
-   Aqui esses nomes passam a apontar para o sistema editorial, então o
-   app inteiro vira claro sem hex solto. Tela reescrita usa --lw-* direto.
+   Aqui esses nomes passam a apontar para o sistema editorial sem hex
+   solto — e como apontam via var(), herdam a troca de tema junto.
+   Tela reescrita usa --lw-* direto.
    ============================================================ */
 :root {
   /* superfícies */
@@ -319,6 +326,14 @@ a.card:hover, button.card:hover {
 .btn--lg { padding: 13px 24px; min-height: 48px; font-size: var(--lw-text-body); }
 .btn--sm { padding: 6px 12px; min-height: 32px; font-size: 13px; }
 
+/* No toque, o botão pequeno deixa de ser pequeno: 32px é confortável para o
+   ponteiro do mouse e escorregadio para o polegar. Aqui vale crescer de
+   verdade (e não só a área sensível como nos micro-labels), porque botão é
+   caixa — ele já ocupa espaço, e ganhar 12px de altura não desalinha nada. */
+@media (pointer: coarse) {
+  .btn--sm { min-height: 44px; padding: 8px 14px; }
+}
+
 /* Link editorial: sublinhado fino que engorda no hover. */
 .link {
   color: var(--lw-accent-deep);
@@ -423,10 +438,11 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
   0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   100% { transform: translate(var(--cf-x), var(--cf-y)) rotate(var(--cf-r)); opacity: 0; }
 }
-/* "pending": pulso de tinta — movimento, não cor. */
+/* "pending": pulso de tinta — movimento, não cor. Os canais vêm de
+   --lw-ink-rgb para o pulso virar tinta clara no tema escuro. */
 @keyframes lw-halo-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(25, 23, 20, 0.16); }
-  50%      { box-shadow: 0 0 0 9px rgba(25, 23, 20, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--lw-ink-rgb), 0.16); }
+  50%      { box-shadow: 0 0 0 9px rgba(var(--lw-ink-rgb), 0); }
 }
 /* Entrada de rota: a página sobe como uma folha sendo posta na mesa. */
 @keyframes lw-page-in {
@@ -481,7 +497,7 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
   ul, ol { margin: 0 0 1.1em; padding-left: 1.4em; }
   li { margin-bottom: 0.4em; }
   li::marker { color: var(--lw-ink-faint); }
-  strong { font-weight: 650; color: var(--lw-ink); }
+  strong { font-weight: 650; color: var(--lw-ink-strong); }
   em { font-style: italic; }
 
   a {
@@ -616,12 +632,12 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
     border-right: 1px solid var(--lw-rule);
     color: var(--lw-ink-faint);
   }
-  .cm-activeLine { background: rgba(176, 71, 43, 0.05); }
-  .cm-activeLineGutter { background: rgba(176, 71, 43, 0.07); color: var(--lw-ink-muted); }
+  .cm-activeLine { background: var(--lw-code-active-line); }
+  .cm-activeLineGutter { background: var(--lw-code-active-gutter); color: var(--lw-ink-muted); }
   .cm-content { padding: 12px 0; caret-color: var(--lw-accent); color: var(--lw-code-ink); }
   .cm-cursor { border-left-color: var(--lw-accent); border-left-width: 2px; }
-  .cm-selectionBackground { background: rgba(176, 71, 43, 0.18) !important; }
-  .cm-matchingBracket { background: rgba(47, 107, 69, 0.18); outline: none; }
+  .cm-selectionBackground { background: var(--lw-code-selection) !important; }
+  .cm-matchingBracket { background: var(--lw-code-bracket); outline: none; }
 }
 
 /* ============================================================
@@ -645,7 +661,10 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
 .page {
   max-width: var(--lw-page-width);
   margin: 0 auto;
-  padding: var(--lw-space-2xl) var(--lw-space-xl) var(--lw-space-3xl);
+  /* O respiro do pé some por baixo da nav de rodapé do celular, então soma o
+     guarda (altura da nav + recorte do aparelho). No desktop o guarda é 0 e
+     esta conta devolve exatamente --lw-space-3xl. */
+  padding: var(--lw-space-2xl) var(--lw-space-xl) calc(var(--lw-space-3xl) + var(--lw-bottom-guard));
 
   /* `backwards`, NUNCA `both`: com `both` o estado final da keyframe fica
      retido e a página herda um `transform: translateY(0)` permanente, que
@@ -685,11 +704,47 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.65; }
 }
 
 @media (max-width: 640px) {
-  .page { padding: var(--lw-space-xl) var(--lw-space-lg) var(--lw-space-2xl); }
+  .page { padding: var(--lw-space-xl) var(--lw-space-lg) calc(var(--lw-space-2xl) + var(--lw-bottom-guard)); }
   .page-title { font-size: 27px; }
   .page-subtitle { font-size: var(--lw-text-body); }
   .md { font-size: 16px; }
 }
+
+/* ============================================================
+   HOME — coreografia de entrada e revelação por rolagem.
+   Global de propósito: o estado inicial do cabeçalho mora no Shell e a
+   timeline de rolagem atravessa componentes — escopo de ViewEncapsulation
+   quebraria os dois.
+   ============================================================ */
+
+/* Estado "armado" do masthead: a home põe esta classe no <html> ANTES da
+   primeira pintura e a coreografia WAAPI (features/dashboard) leva cada peça
+   ao lugar. A classe sai quando a coreografia termina. */
+html.lw-intro-masthead .masthead [data-intro="logo"]   { opacity: 0; transform: scale(0.9); }
+html.lw-intro-masthead .masthead [data-intro="nav"]    { opacity: 0; transform: translateY(7px); }
+html.lw-intro-masthead .masthead [data-intro="status"] { opacity: 0; }
+
+/* Bloco que sobe da folha conforme entra na tela — dirigido pela ROLAGEM
+   (scroll-driven animation), não por tempo: rolar devagar revela devagar.
+   Navegador sem view() mostra o estado final; menos movimento idem. */
+.lw-reveal {
+  animation: lw-reveal-up linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+@keyframes lw-reveal-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: none; }
+}
+@supports not (animation-timeline: view()) {
+  .lw-reveal { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lw-reveal { animation: none; }
+}
+
+/* Definições SVG (filtros de cor do vídeo) fora do fluxo, sem ocupar espaço. */
+.lw-svgdefs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* ============================================================
    prefers-reduced-motion

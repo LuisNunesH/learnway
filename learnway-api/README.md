@@ -50,8 +50,8 @@ descritivas/código) retornam **502** com mensagem amigável; o resto da API fun
    ```
 2. **Preencha com suas credenciais** (o arquivo `.env` é ignorado pelo git):
    ```
-   DATABASE_URL=jdbc:postgresql://ep-steep-queen-atby9sln.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require
-   DATABASE_USERNAME=neondb_owner
+   DATABASE_URL=jdbc:postgresql://<seu-host>.neon.tech/neondb?sslmode=require
+   DATABASE_USERNAME=<seu-usuario-neon>
    DATABASE_PASSWORD=<sua-senha>
    JWT_SECRET=<base64-de-256-bits>
    GEMINI_API_KEY=<sua-chave-gemini>

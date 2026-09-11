@@ -48,7 +48,7 @@ class SessionServiceTest {
         when(users.findById(USER)).thenReturn(Optional.of(new User()));
 
         AppClock clock = new AppClock("America/Sao_Paulo", Clock.fixed(NOW, ZoneOffset.UTC));
-        service = new SessionService(sessions, users, gamification, clock, 240, 10);
+        service = new SessionService(sessions, users, gamification, clock, 240, 10, 180);
     }
 
     @Test
@@ -134,6 +134,87 @@ class SessionServiceTest {
         assertThat(stale.getEndedAt()).isEqualTo(minutesAgo(570));
         assertThat(stale.getDurationMinutes()).isEqualTo(30);
         assertThat(stats.activeSessionStartedAt()).isNull();
+    }
+
+    @Test
+    void tempoForaDaTelaNaoEContadoNaDuracao() {
+        StudySession open = open(minutesAgo(30), minutesAgo(30));
+        open.setPausedAt(minutesAgo(20));   // saiu da tela após 10 min de estudo
+        open.setAwaySeconds(0);
+        when(sessions.findFirstByUserIdAndEndedAtIsNullOrderByStartedAtDesc(USER))
+                .thenReturn(Optional.of(open));
+
+        // Voltou para a tela: os 20 min fora viram tempo ausente, não estudo.
+        service.resume(USER);
+        assertThat(open.getPausedAt()).isNull();
+        assertThat(open.getAwaySeconds()).isEqualTo(20 * 60);
+
+        SessionDto dto = service.end(USER);
+
+        assertThat(dto.durationMinutes()).isEqualTo(10);
+        assertThat(open.getEndedAt()).isEqualTo(OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC));
+    }
+
+    @Test
+    void cronometroContinuaDeOndeParouAoVoltarParaATela() {
+        StudySession open = open(minutesAgo(45), minutesAgo(45));
+        open.setAwaySeconds(5 * 60);        // já havia saído da tela antes
+        open.setPausedAt(minutesAgo(15));
+        when(sessions.findFirstByUserIdAndEndedAtIsNullOrderByStartedAtDesc(USER))
+                .thenReturn(Optional.of(open));
+
+        SessionDto dto = service.resume(USER);
+
+        // 45 min de sessão - 5 min de ausência anterior - 15 min de pausa = 25.
+        assertThat(dto.activeSeconds()).isEqualTo(25 * 60);
+        assertThat(dto.paused()).isFalse();
+        assertThat(dto.startedAt()).isEqualTo(open.getStartedAt());
+    }
+
+    @Test
+    void pausarCongelaOCronometroSemEncerrarASessao() {
+        StudySession open = open(minutesAgo(12), minutesAgo(1));
+        when(sessions.findFirstByUserIdAndEndedAtIsNullOrderByStartedAtDesc(USER))
+                .thenReturn(Optional.of(open));
+
+        SessionDto first = service.pause(USER);
+        SessionDto second = service.pause(USER);   // idempotente
+
+        assertThat(open.getEndedAt()).isNull();
+        assertThat(open.getPausedAt()).isEqualTo(OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC));
+        assertThat(first.paused()).isTrue();
+        assertThat(second.activeSeconds()).isEqualTo(first.activeSeconds()).isEqualTo(12 * 60);
+    }
+
+    @Test
+    void sessaoPausadaSobrevivePorMaisTempoQueAOciosa() {
+        // 40 min fora da tela: passaria do idle timeout de 10 min, mas a
+        // pausa tem folga de 3h — o cronômetro retoma em vez de recomeçar.
+        StudySession paused = open(minutesAgo(60), minutesAgo(40));
+        paused.setPausedAt(minutesAgo(40));
+        when(sessions.findFirstByUserIdAndEndedAtIsNullOrderByStartedAtDesc(USER))
+                .thenReturn(Optional.of(paused));
+
+        SessionDto dto = service.start(USER);
+
+        assertThat(paused.getEndedAt()).isNull();
+        assertThat(dto.startedAt()).isEqualTo(paused.getStartedAt());
+        assertThat(dto.activeSeconds()).isEqualTo(20 * 60);
+    }
+
+    @Test
+    void pausaLongaDemaisEncerraASessaoNoInicioDaPausa() {
+        StudySession paused = open(minutesAgo(260), minutesAgo(230));
+        paused.setPausedAt(minutesAgo(230));    // quase 4h fora da tela
+        when(sessions.findFirstByUserIdAndEndedAtIsNullOrderByStartedAtDesc(USER))
+                .thenReturn(Optional.of(paused))
+                .thenReturn(Optional.empty());
+
+        SessionDto dto = service.start(USER);
+
+        assertThat(paused.getEndedAt()).isEqualTo(minutesAgo(230));
+        assertThat(paused.getDurationMinutes()).isEqualTo(30);
+        assertThat(dto.startedAt()).isEqualTo(OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC));
     }
 
     private StudySession open(OffsetDateTime startedAt, OffsetDateTime lastSeenAt) {

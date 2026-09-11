@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { PresenceService } from '../../core/presence.service';
 import { StudySessionService } from '../../core/study-session.service';
 import { ToastService } from '../../core/toast.service';
 import { Achievement, AnswerResult, CompleteLessonResult, LessonDetail, Question } from '../../core/models';
@@ -20,9 +21,13 @@ type Verdict = 'correct' | 'partial' | 'wrong';
 
 interface ConfettiPiece { x: string; y: string; r: string; color: string; delay: string; left: string; }
 
-// Cores fixas do confete (não seguem estado de avaliação) — os cinco matizes do
-// sistema "Papel": terracota, verde, âmbar, índigo e a própria tinta.
-const CONFETTI_COLORS = ['#b0472b', '#2f6b45', '#8a5a0b', '#3d4a7a', '#191714', '#d99a6e'];
+// Cores do confete (não seguem estado de avaliação) — os cinco matizes do
+// sistema mais um degrau da rampa. Via token, para o confete cair em vermelho
+// e tinta clara no tema escuro em vez de sumir contra o nanquim.
+const CONFETTI_COLORS = [
+  'var(--lw-accent)', 'var(--lw-eval-correct)', 'var(--lw-streak)',
+  'var(--lw-level)', 'var(--lw-ink)', 'var(--lw-ramp-2)',
+];
 
 @Component({
   selector: 'lw-lesson',
@@ -745,6 +750,7 @@ export class LessonPlayer implements OnInit, OnDestroy {
   private router = inject(Router);
   private session = inject(StudySessionService);
   private chatSession = inject(AiChatSessionService);
+  private presence = inject(PresenceService);
 
   readonly phase = signal<Phase>('loading');
   readonly lesson = signal<LessonDetail | null>(null);
@@ -766,7 +772,11 @@ export class LessonPlayer implements OnInit, OnDestroy {
   challengeCode = '';
 
   private results: AnswerResult[] = [];
-  private questionStartedAt = Date.now();
+  /**
+   * Início da questão no relógio de presença: o tempo fora da tela não conta
+   * como tempo de resposta (ver PresenceService).
+   */
+  private questionStartedAt = 0;
 
   readonly currentQuestion = computed<Question | null>(() => {
     const l = this.lesson();
@@ -885,7 +895,7 @@ export class LessonPlayer implements OnInit, OnDestroy {
     const q = this.currentQuestion();
     if (!q || !this.canSubmit() || this.submitting()) return;
     this.submitting.set(true);
-    const timeSpentSeconds = Math.max(1, Math.round((Date.now() - this.questionStartedAt) / 1000));
+    const timeSpentSeconds = Math.max(1, Math.round((this.presence.activeMs() - this.questionStartedAt) / 1000));
     if (q.type === 'CODE_CHALLENGE') this.submittedCode.set(this.challengeCode);
     try {
       const result = await firstValueFrom(this.api.answerQuestion(q.id, {
@@ -960,7 +970,7 @@ export class LessonPlayer implements OnInit, OnDestroy {
     this.selectedOptionId.set(null);
     this.answerText = '';
     this.challengeCode = this.currentQuestion()?.codeChallenge?.initialCode ?? '';
-    this.questionStartedAt = Date.now();
+    this.questionStartedAt = this.presence.activeMs();
   }
 
   private burstConfetti(count = 26): void {

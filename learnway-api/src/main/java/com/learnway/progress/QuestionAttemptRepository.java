@@ -29,12 +29,16 @@ public interface QuestionAttemptRepository extends JpaRepository<QuestionAttempt
             """)
     long countFastCorrectMultipleChoice(@Param("userId") UUID userId);
 
-    /** Attempts per day inside a window (activity calendar), no fuso {@code :zone}. */
+    /**
+     * Attempts per day inside a window (activity calendar), no fuso {@code :zone}.
+     * Agrupa por ordinal: repetir a expressão no group by criaria um segundo
+     * placeholder e o Postgres não a reconheceria como a mesma do select.
+     */
     @Query(value = """
             select cast(a.created_at at time zone :zone as date) as date, count(*) as total
             from question_attempts a
             where a.user_id = :userId and a.created_at >= :from and a.created_at < :to
-            group by cast(a.created_at at time zone :zone as date)
+            group by 1
             """, nativeQuery = true)
     List<DailyCountRow> dailyCountsBetween(@Param("userId") UUID userId,
                                            @Param("from") java.time.OffsetDateTime from,

@@ -51,6 +51,10 @@ Estas partes estão testadas de verdade — não são promessa:
 | `curl` existe na imagem base | ✅ (o healthcheck do compose depende disso) |
 | Build do frontend com a troca de ambiente | ✅ nenhum `localhost` no bundle |
 | `.env` real fora do git | ✅ ignorado; só o `.env.example` é versionado |
+| `npm ci` (o que a Cloudflare roda) | ✅ lockfile em dia |
+| Responsividade: 10 telas × 4 aparelhos (360–768 px) × 2 temas | ✅ zero rolagem horizontal, nada sob a nav |
+| Alvos de toque ≥ 44 px | ✅ medidos com a área sensível real, não só a caixa |
+| Vídeo do hero | ✅ servido pelo próprio site (`public/media/`), pulado no celular |
 
 E o que **não** funciona, medido aqui: com 512 MB e 0.1 de CPU (plano grátis do
 Render) a aplicação **não terminou de subir em 20 minutos**. Por isso a VM da Oracle,
@@ -113,14 +117,28 @@ Menu ☰ → *Compute* → *Instances* → **Create instance**.
 | --- | --- |
 | Name | `learnway` |
 | Image | **Canonical Ubuntu 22.04** |
-| Shape | *Change shape* → **Ampere** → `VM.Standard.A1.Flex` |
-| OCPUs | `2` |
-| Memory | `12 GB` |
+| Shape | *Change shape* → **AMD** → `VM.Standard.E2.1.Micro` |
+| OCPUs / Memory | fixos em 1 OCPU / 1 GB |
 
-> **Pedi 2 núcleos e 12 GB, metade da cota, de propósito.** A cota Always Free é 4
-> OCPU / 24 GB, mas pedir tudo aumenta muito a chance de bater em *"Out of host
-> capacity"*. Sobra folga enorme para esta aplicação, e você ainda pode expandir
-> depois.
+> **Por que a AMD fraquinha e não a Ampere ARM, que é bem melhor?**
+>
+> Porque a ARM não sai. A cota Always Free dá 4 OCPU / 24 GB de Ampere A1, e essa
+> cota **está inteira disponível** na conta — o que falta é máquina física livre.
+> Medido aqui em 10/09/2026: **119 tentativas ao longo de uma madrugada inteira,
+> todas "Out of capacity"**, pedindo apenas 1 OCPU / 6 GB. Não é configuração
+> errada nem permissão; é fila por hardware, e nada que você mude na conta muda
+> isso.
+>
+> A `E2.1.Micro` é x86, tem 1 OCPU / 1 GB cravados, e é Always Free (você tem
+> direito a duas). Por ser velha e fraca, quase ninguém a disputa: **subiu em 33
+> segundos, na primeira tentativa**. É apertada, mas a aplicação cabe — o boot
+> com 1 vCPU / 1 GB foi medido em ~12 s, e a VM leva 2 GB de swap como rede de
+> segurança.
+>
+> Se preferir insistir na ARM, [`deploy/criar-vm-oracle.py`](deploy/criar-vm-oracle.py)
+> fica tentando sozinho e avisa quando conseguir. Rodando sem `--amd` ele caça a
+> Ampere; com `--amd`, cria a AMD. Migrar depois é trocar uma linha no workflow
+> (`linux/amd64` → `linux/arm64`) e subir a stack na máquina nova.
 
 Em *Add SSH keys*, escolha **Generate a key pair for me** e **baixe a chave privada** —
 ela não aparece de novo. Salve como `~/.ssh/learnway_oracle`.
@@ -256,9 +274,15 @@ emitir o certificado:
 
 ```bash
 echo "API_IMAGE=ghcr.io/SEU_USUARIO/learnway/learnway-api:latest" > .env
-docker compose up -d caddy
+docker compose up -d --no-deps caddy
 docker compose logs -f caddy      # espere "certificate obtained successfully"
 ```
+
+> **O `--no-deps` não é opcional.** O serviço `caddy` declara `depends_on: api`,
+> então sem essa flag o compose tenta subir a API junto — e a imagem dela ainda
+> não existe no GHCR neste ponto do roteiro. O GHCR responde `denied`, e o erro
+> **aborta o download do Caddy no meio**, com uma mensagem que parece dizer que o
+> problema é o Caddy. Não é.
 
 Se o certificado saiu, o mais difícil acabou. Confirme de fora da VM:
 
@@ -350,6 +374,12 @@ A URL sai como `https://learnway-xxx.pages.dev` — anote.
 
 > O [`learnway-web/public/_redirects`](learnway-web/public/_redirects) já está no
 > repositório: é ele que faz `/trilha`, `/perfil` e o F5 funcionarem em vez de 404.
+
+> **Sobre o vídeo do hero.** Ele mora em `learnway-web/public/media/hero-plate.mp4`
+> (8 MB) e vai junto no build — a Cloudflare serve arquivos de até 25 MB, então
+> cabe. Ficar no repositório é de propósito: antes ele vinha de um CDN de terceiro,
+> que pode sair do ar sem aviso e quebrar a capa em produção. No celular ele nem
+> é baixado (ver `PLATE_MIN_WIDTH` em `features/dashboard/dashboard.ts`).
 
 ### 6.2 Apontar o frontend para o backend
 

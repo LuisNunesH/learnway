@@ -21,13 +21,15 @@ public interface XpEventRepository extends JpaRepository<XpEvent, UUID> {
      * Events of a source per day inside a window (activity calendar counts reviews).
      * O dia é o dia civil em {@code :zone} — agrupar em UTC jogaria a atividade
      * feita depois das 21h de Brasília para o dia seguinte.
+     * Agrupa por ordinal: repetir a expressão no group by criaria um segundo
+     * placeholder e o Postgres não a reconheceria como a mesma do select.
      */
     @Query(value = """
             select cast(e.created_at at time zone :zone as date) as date, count(*) as total
             from xp_events e
             where e.user_id = :userId and e.source = :source
               and e.created_at >= :from and e.created_at < :to
-            group by cast(e.created_at at time zone :zone as date)
+            group by 1
             """, nativeQuery = true)
     List<DailyCountRow> dailyCountsBySourceBetween(@Param("userId") UUID userId,
                                                    @Param("source") String source,

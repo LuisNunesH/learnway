@@ -8,9 +8,13 @@
    micro-labels em mono caixa-alta. Profundidade = espaço em branco
    + fio de 1px. Um acento terracota, usado com parcimônia.
 
+   O tema ESCURO ("Nanquim") vive no fim deste arquivo, em
+   :root[data-theme="dark"], e só troca VALORES — mesma lista de
+   tokens, mesma semântica. Token novo entra nos DOIS blocos.
+
    Todos os pares de cor foram validados em WCAG AA
-   (scratchpad contrast-editorial.js — texto ≥4.5:1, rampas
-   ordinais ≥1.25 entre vizinhos).
+   (scratchpad contrast-editorial.js / contrast-dark.js — texto
+   ≥4.5:1, rampas ordinais ≥1.25 entre vizinhos).
    ============================================================ */
 
 :root {
@@ -27,6 +31,16 @@
   --lw-ink-muted:  #655f53;   /*  5.9:1 — passa AA em todas as superfícies */
   --lw-ink-faint:  #948c7d;   /*  3.1:1 — metadado/eyebrow, NUNCA texto essencial */
 
+  /* Canais crus da tinta e do acento. Existem porque rgba() não aceita var()
+     como cor inteira: keyframe e canvas montam a cor a partir daqui e assim
+     acompanham a troca de tema sem literal solto. */
+  --lw-ink-rgb:    25, 23, 20;
+
+  /* Negrito da prosa (.md strong). No papel o destaque já é o PESO — dar cor
+     a ele competiria com o acento, então segue tinta. No nanquim o peso sozinho
+     quase não aparece contra tinta clara, e o negrito vira vermelho. */
+  --lw-ink-strong: var(--lw-ink);
+
   /* ---------- 3. FIO (réguas e bordas) ----------
      A régua é o único elemento estrutural do sistema. */
   --lw-rule:         #dad3c3;
@@ -39,6 +53,7 @@
   --lw-accent-deep:  #8e3620;   /* hover, links, texto sobre rebaixo */
   --lw-accent-wash:  rgba(176, 71, 43, 0.10);
   --lw-accent-edge:  rgba(176, 71, 43, 0.30);
+  --lw-accent-rgb:   176, 71, 43;
 
   /* Tinta clara para texto/ícone POR CIMA de um preenchimento sólido colorido
      (botão primário, marcador concluído, contador do calendário). Validado
@@ -87,8 +102,8 @@
   /* ---------- 7b. CÓDIGO ----------
      Paleta clara própria: o bloco de markdown e o CodeMirror compartilham
      estas tintas. Todos os pares ≥4.5:1 sobre --lw-code-bg (validados no
-     script). O CodeMirror repete os literais em code-editor.ts porque monta
-     a folha de estilo em JS e não enxerga custom properties. */
+     script). O CodeMirror consome estes mesmos tokens via var() na folha
+     que monta em JS, então acompanha a troca de tema sozinho. */
   --lw-code-bg:    #f5f2ea;
   --lw-code-ink:   #191714;
   --lw-code-cmt:   #6e6959;
@@ -98,6 +113,12 @@
   --lw-code-num:   #7a4e8c;
   --lw-code-ann:   #8a5a0b;
   --lw-code-punct: #655f53;
+
+  /* Estados de interação do editor. Washes, não texto. */
+  --lw-code-active-line:   rgba(176, 71, 43, 0.05);
+  --lw-code-active-gutter: rgba(176, 71, 43, 0.07);
+  --lw-code-selection:     rgba(176, 71, 43, 0.18);
+  --lw-code-bracket:       rgba(47, 107, 69, 0.18);
 
   /* ---------- 8. TIPOGRAFIA ----------
      Três vozes: serifa de display (personalidade), serifa de leitura
@@ -143,6 +164,20 @@
      embaixo dele calcula o `top` a partir daqui, nunca de um número solto. */
   --lw-masthead-h: 59px;
 
+  /* Altura da nav de rodapé do celular (7px + ícone 18 + 3 + rótulo 12 + 7,
+     mais o fio). No desktop a nav mora no cabeçalho, então vale ZERO — e todo
+     cálculo que a soma se anula sozinho, sem media query no consumidor.
+     O valor real é assumido em @media (max-width: 900px), no fim do arquivo. */
+  --lw-navbar-h: 0px;
+
+  /* Recorte inferior do aparelho (barra de gestos do iPhone). Só devolve algo
+     diferente de zero com `viewport-fit=cover` no index.html. */
+  --lw-safe-b: env(safe-area-inset-bottom, 0px);
+
+  /* O que qualquer coisa ancorada no pé da janela precisa vencer para não
+     ficar debaixo da nav: FABs, toasts e o respiro final das páginas. */
+  --lw-bottom-guard: calc(var(--lw-navbar-h) + var(--lw-safe-b));
+
   /* Medida de leitura — largura ideal de coluna de texto. */
   --lw-measure:      68ch;
   --lw-page-width:   1080px;
@@ -174,11 +209,33 @@
 
   /* ---------- 13. MOVIMENTO ---------- */
   --lw-blur-nav: 10px;
+
+  /* Ganho de opacidade da grade editorial do fundo (lw-backdrop). No papel
+     claro 1 basta; no escuro a tinta é clara e precisa de um empurrão. */
+  --lw-backdrop-gain: 1;
   --lw-ease:      cubic-bezier(0.2, 0.7, 0.25, 1);
   --lw-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
   --lw-dur-fast: 140ms;
   --lw-dur:      260ms;
   --lw-dur-slow: 520ms;
+
+  /* Coreografia de entrada da home (WAAPI lê estes valores via
+     getComputedStyle, então a curva mora aqui e só aqui). --lw-ease-out já É
+     a "expo" da coreografia; as outras três completam o vocabulário. */
+  --lw-ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --lw-ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --lw-ease-type:  cubic-bezier(0.22, 0.85, 0.24, 1);
+  --lw-dur-roll:   900ms;   /* fita do odômetro */
+
+  /* ---------- 14. PLACA DE VÍDEO (hero da home) ----------
+     A mesma filmagem escura serve aos dois temas, mas o tratamento inverte:
+     no papel ela é IMPRESSA — LUT invertida + multiply, o claro do vídeo
+     vira tinta e o escuro vira papel. O passe de luz (lift) só existe no
+     nanquim, onde há preto para acender. */
+  --lw-plate-filter:  url(#lw-grade-paper);
+  --lw-plate-blend:   multiply;
+  --lw-plate-opacity: 0.92;
+  --lw-plate-lift:    none;    /* display do segundo passe */
 
   color-scheme: light;
 
@@ -223,5 +280,154 @@ html {
     --lw-dur-fast: 0ms;
     --lw-dur:      0ms;
     --lw-dur-slow: 0ms;
+    --lw-dur-roll: 0ms;
   }
+}
+
+/* ============================================================
+   TEMA ESCURO — "Nanquim"
+   Mesmíssima estrutura de tokens; só os VALORES mudam. Nenhum
+   seletor de componente precisa saber que existe tema escuro:
+   tudo lá usa var(--lw-*), então a troca acontece aqui e só aqui.
+
+   Direção: a página vira NANQUIM — preto quente, tinta clara,
+   e o acento sai da terracota para um VERMELHO de tinta viva, que
+   é o que sobrevive sobre preto (terracota some no escuro).
+   Sobre preenchimento vermelho a tinta inverte: texto quase preto
+   (--lw-on-color), porque branco sobre vermelho vivo dá só 3.4:1.
+
+   Pares validados em WCAG AA pelo mesmo método do claro
+   (scratchpad/contrast-dark.js — texto ≥4.5:1 nas quatro
+   superfícies, rampa ordinal ≥1.25 entre vizinhos).
+   ============================================================ */
+:root[data-theme="dark"] {
+  /* ---------- 1. PAPEL → NANQUIM (superfícies) ----------
+     Pretos levemente quentes (um resto de vermelho no cinza), para
+     não brigar com o acento. Continuam sutis entre si: quem separa
+     as coisas segue sendo o fio, não a cor. */
+  --lw-paper:         #0c0b0b;
+  --lw-paper-raised:  #151212;
+  --lw-paper-sunken:  #1c1818;
+  --lw-paper-deep:    #262020;
+
+  /* ---------- 2. TINTA (texto) — agora clara ---------- */
+  --lw-ink:        #f4efec;   /* 17.2:1 no nanquim */
+  --lw-ink-muted:  #a8a09c;   /*  7.6:1 */
+  --lw-ink-faint:  #7c7370;   /*  4.2:1 — metadado/eyebrow */
+  --lw-ink-rgb:    244, 239, 236;
+
+  /* Negrito da prosa: vermelho puro (matiz 0°), um degrau mais FUNDO que o
+     acento vermelhão (6°, alaranjado) — dá para ver que são dois vermelhos.
+     Não dá para descer mais: negrito de prosa é texto essencial a 17px, e
+     sobre nanquim o piso de 4.5:1 fica exatamente aqui (4.68:1 no pior caso,
+     o balão rebaixado do chat). Um vinho de verdade (#b5322c) daria 2.90:1. */
+  --lw-ink-strong: #f04343;
+
+  /* ---------- 3. FIO ---------- */
+  --lw-rule:         #322b2b;
+  --lw-rule-strong:  #493f3f;
+  --lw-rule-hair:    #211d1d;
+
+  /* ---------- 4. ACENTO — vermelho de tinta ----------
+     No claro "deep" era mais ESCURO que o acento (hover sobre papel);
+     aqui é mais CLARO, porque no escuro hover e link sobem de luz. */
+  --lw-accent:       #ef5b4c;   /* 5.9:1 no nanquim */
+  --lw-accent-deep:  #ff8574;   /* 8.3:1 — hover, links, texto sobre rebaixo */
+  --lw-accent-wash:  rgba(239, 91, 76, 0.15);
+  --lw-accent-edge:  rgba(239, 91, 76, 0.40);
+  --lw-accent-rgb:   239, 91, 76;
+
+  /* A inversão: sobre sólido colorido o texto vira quase preto.
+     Validado ≥4.5:1 contra acento, correto, parcial, errado e nível. */
+  --lw-on-color: #120e0e;
+
+  /* ---------- 5. ESTADOS DE AVALIAÇÃO ----------
+     "errado" é vermelho-rosado e o acento é vermelho-vermelhão: a
+     mesma distância de matiz que carmim×terracota tinha no claro. */
+  --lw-eval-correct:  #4fbf7d;   /* 8.5:1 */
+  --lw-eval-partial:  #d99e3d;   /* 8.3:1 */
+  --lw-eval-wrong:    #fb5d70;   /* 6.5:1 */
+
+  --lw-eval-correct-bg: rgba(79, 191, 125, 0.14);
+  --lw-eval-partial-bg: rgba(217, 158, 61, 0.14);
+  --lw-eval-wrong-bg:   rgba(251, 93, 112, 0.14);
+  --lw-eval-idle-bg:    rgba(244, 239, 236, 0.06);
+
+  --lw-eval-correct-edge: rgba(79, 191, 125, 0.38);
+  --lw-eval-partial-edge: rgba(217, 158, 61, 0.38);
+  --lw-eval-wrong-edge:   rgba(251, 93, 112, 0.38);
+
+  /* ---------- 6. GAMIFICAÇÃO ---------- */
+  --lw-streak:  #d99e3d;
+  --lw-level:   #8b9bea;   /* 7.5:1 */
+
+  --lw-streak-bg:   rgba(217, 158, 61, 0.14);
+  --lw-level-bg:    rgba(139, 155, 234, 0.14);
+  --lw-streak-edge: rgba(217, 158, 61, 0.38);
+  --lw-level-edge:  rgba(139, 155, 234, 0.38);
+
+  /* ---------- 7. RAMPA DE ATIVIDADE ----------
+     Some do nanquim e ACENDE em vermelho — no claro ela escurecia. */
+  --lw-ramp-0: #1c1818;
+  --lw-ramp-1: #511f19;
+  --lw-ramp-2: #7d2e23;
+  --lw-ramp-3: #b3402e;
+  --lw-ramp-4: #ef5f45;
+
+  /* ---------- 7b. CÓDIGO ---------- */
+  --lw-code-bg:    #131010;
+  --lw-code-ink:   #eae4e1;
+  --lw-code-cmt:   #857a76;
+  --lw-code-kw:    #ff7b6a;
+  --lw-code-type:  #6cb8dc;
+  --lw-code-str:   #74c78f;
+  --lw-code-num:   #c49ce4;
+  --lw-code-ann:   #dda446;
+  --lw-code-punct: #a8a09c;
+
+  --lw-code-active-line:   rgba(239, 91, 76, 0.07);
+  --lw-code-active-gutter: rgba(239, 91, 76, 0.10);
+  --lw-code-selection:     rgba(239, 91, 76, 0.26);
+  --lw-code-bracket:       rgba(79, 191, 125, 0.26);
+
+  /* ---------- 11. PROFUNDIDADE ----------
+     Sombra no escuro não é tinta diluída: é ausência de luz. Preto
+     puro e mais opaco, senão a camada flutuante não descola do fundo. */
+  --lw-lift-sm: 0 1px 2px rgba(0, 0, 0, 0.50);
+  --lw-lift:    0 2px 4px rgba(0, 0, 0, 0.40), 0 10px 28px rgba(0, 0, 0, 0.60);
+  --lw-lift-lg: 0 4px 8px rgba(0, 0, 0, 0.45), 0 24px 56px rgba(0, 0, 0, 0.70);
+
+  --lw-scrim:             rgba(0, 0, 0, 0.62);
+  --lw-paper-veil:        rgba(12, 11, 11, 0.82);
+  --lw-paper-veil-strong: rgba(12, 11, 11, 0.94);
+
+  /* ---------- 13. MOVIMENTO ---------- */
+  --lw-backdrop-gain: 1.4;   /* tinta clara sobre preto pede mais corpo */
+
+  /* ---------- 14. PLACA DE VÍDEO ----------
+     Sobre nanquim a filmagem entra como é: LUT de cinema, sem blend, e o
+     segundo passe (plus-lighter) levanta a metade de baixo. */
+  --lw-plate-filter:  url(#lw-grade-ink);
+  --lw-plate-blend:   normal;
+  --lw-plate-opacity: 1;
+  --lw-plate-lift:    block;
+
+  color-scheme: dark;
+
+  /* Aliases do sistema anterior: o fundo do nav era wash de tinta
+     escura; no nanquim a tinta é clara, então o wash inverte. */
+  --lw-surface-nav: rgba(244, 239, 236, 0.07);
+}
+
+/* ============================================================
+   NAV DE RODAPÉ — o mesmo ponto de corte do Shell (900px).
+
+   Fica aqui, e não no componente, porque quem precisa DESVIAR da nav
+   (páginas, FABs, toasts) vive espalhado pelo app e não pode depender
+   de repetir a media query nem de adivinhar a altura. Acima de 900px a
+   nav volta para o cabeçalho e o token zera — aí todo
+   calc(... + var(--lw-bottom-guard)) se anula sozinho.
+   ============================================================ */
+@media (max-width: 900px) {
+  :root { --lw-navbar-h: 61px; }
 }

@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Build ARM64, publicar e implantar
+    name: Build AMD64, publicar e implantar
     runs-on: ubuntu-latest
 
     steps:
@@ -47,14 +47,25 @@ jobs:
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "tagged=$IMAGE:${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      # A VM Always Free da Oracle é ARM (Ampere A1), então a imagem PRECISA
-      # ser linux/arm64. O Dockerfile compila no x86 do runner e só o runtime
-      # é ARM — sem isso, o Maven rodaria emulado e o build levaria ~20 min.
-      - name: Build e push (linux/arm64)
+      # x86, e não ARM: a VM é uma VM.Standard.E2.1.Micro (AMD).
+      #
+      # O plano original era a Ampere A1 (ARM, 4 OCPU / 24 GB), mas a
+      # capacidade dessas máquinas está esgotada em São Paulo — 119 tentativas
+      # seguidas ao longo de uma madrugada inteira, todas "Out of capacity",
+      # com a cota intacta (41 cores livres). É fila por hardware, não permissão.
+      # A E2.1.Micro é mais fraca (1 OCPU / 1 GB) mas sempre tem vaga: subiu em
+      # 33 segundos na primeira tentativa.
+      #
+      # Efeito colateral bom: agora runner e alvo são a mesma arquitetura, então
+      # não há emulação em lugar nenhum e o build ficou mais rápido.
+      #
+      # Se um dia a capacidade ARM abrir (deploy/criar-vm-oracle.py continua
+      # servindo para caçá-la), volte esta linha para linux/arm64.
+      - name: Build e push (linux/amd64)
         uses: docker/build-push-action@v6
         with:
           context: ./learnway-api
-          platforms: linux/arm64
+          platforms: linux/amd64
           push: true
           provenance: false   # o Docker antigo da VM não entende manifesto de atestação
           tags: |

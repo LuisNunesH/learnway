@@ -31,3 +31,4 @@ _redirects      text eol=lf
 *.woff2 binary
 *.jar binary
 *.zip binary
+*.mp4 binary

@@ -503,10 +503,17 @@ import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
       .topic--active { border-left-color: transparent; border-bottom-color: var(--lw-accent); }
       .reader__title { font-size: var(--lw-text-h1); }
       .reader__lede { font-size: 17px; }
-      .fabs { right: 14px; bottom: 14px; }
+      /* Os 14px de folga são medidos a partir do TOPO da nav de rodapé, não
+         da borda da janela — senão o botão cai em cima da barra. */
+      .fabs { right: 14px; bottom: calc(14px + var(--lw-bottom-guard)); }
       .fab__label { display: none; }
       .fab { padding: 12px; }
-      .notes { right: 14px; bottom: 76px; width: calc(100vw - 28px); }
+      .notes {
+        right: 14px;
+        bottom: calc(76px + var(--lw-bottom-guard));
+        width: calc(100vw - 28px);
+        max-height: calc(100svh - var(--lw-masthead-h) - var(--lw-bottom-guard) - 108px);
+      }
     }
   `],
 })

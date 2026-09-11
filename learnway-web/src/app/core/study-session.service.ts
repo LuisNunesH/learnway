@@ -1,13 +1,15 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { API_URL } from './api.config';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
+import { StudySession } from './models';
+import { PresenceService } from './presence.service';
 
 /** Sinal de vida enviado ao servidor enquanto a aba está visível. */
 const HEARTBEAT_MS = 60_000;
 /**
- * Sem interação (ou com a aba escondida) por este tempo, ninguém está
+ * Sem interação por este tempo (já contado só na tela), ninguém está
  * estudando. Espelha o learnway.session.idle-timeout-minutes do servidor,
  * que é quem decide até onde o tempo é creditado.
  */
@@ -24,20 +26,31 @@ const MAX_SESSION_MS = 4 * 60 * 60_000;
  * chamam start() ao abrir e end() ao sair, em contagem de referências (trocar
  * de lição não reinicia o cronômetro). Enquanto a aba está visível um
  * heartbeat avisa o servidor de que o estudo continua — e ele para assim que
- * a aba some ou a interação cessa, congelando o relógio. Assim uma aba
- * esquecida aberta não vira "estudo", e uma fechada sem o pagehide chegar ao
- * servidor não volta no dia seguinte marcando 60h.
+ * a interação cessa, congelando o relógio. Assim uma aba esquecida aberta não
+ * vira "estudo", e uma fechada sem o pagehide chegar ao servidor não volta no
+ * dia seguinte marcando 60h.
+ *
+ * Sair da tela (outra aba, janela sem foco) pausa a contagem dos dois lados:
+ * o cliente para de somar via {@link PresenceService} e avisa o servidor, que
+ * desconta o intervalo da duração creditada. Ao voltar, o cronômetro segue de
+ * onde parou — o tempo fora simplesmente não existiu.
  */
 @Injectable({ providedIn: 'root' })
 export class StudySessionService {
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private presence = inject(PresenceService);
 
   /** Quantas telas de estudo estão abertas; a sessão vive enquanto houver ≥ 1. */
   private holders = 0;
-  private startedAtMs: number | null = null;
-  private hiddenSinceMs: number | null = null;
-  private lastInteractionMs = Date.now();
+  /** Sessão que o cronômetro está exibindo; muda quando o servidor abre outra. */
+  private sessionId: string | null = null;
+  /** Segundos que o servidor já credita à sessão, na última resposta dele. */
+  private syncedSeconds = 0;
+  /** Leitura do relógio de presença no instante desse sync. */
+  private syncedAtActiveMs = 0;
+  /** Última interação, medida em tempo de tela (ver PresenceService.activeMs). */
+  private lastInteractionActiveMs = 0;
   private tick: ReturnType<typeof setInterval> | null = null;
   private beat: ReturnType<typeof setInterval> | null = null;
   /** Fila serial: sair de uma lição tem de chegar ao servidor antes de entrar na próxima. */
@@ -45,6 +58,8 @@ export class StudySessionService {
   private readonly elapsedSeconds = signal(0);
 
   readonly active = signal(false);
+  /** Cronômetro congelado porque o usuário saiu da tela. */
+  readonly paused = signal(false);
   readonly display = computed(() => {
     const total = this.elapsedSeconds();
     const h = Math.floor(total / 3600);
@@ -56,10 +71,12 @@ export class StudySessionService {
   constructor() {
     // Garante o encerramento da sessão quando a aba fecha/recarrega.
     window.addEventListener('pagehide', () => this.endWithBeacon());
-    document.addEventListener('visibilitychange', () => this.onVisibilityChange());
     for (const event of INTERACTION_EVENTS) {
-      window.addEventListener(event, () => (this.lastInteractionMs = Date.now()), { passive: true });
+      window.addEventListener(event, () => (this.lastInteractionActiveMs = this.presence.activeMs()), {
+        passive: true,
+      });
     }
+    this.presence.watch(onScreen => this.onPresenceChange(onScreen));
   }
 
   /** Uma tela de estudo foi aberta. */
@@ -98,10 +115,9 @@ export class StudySessionService {
   private async open(): Promise<void> {
     try {
       const session = await firstValueFrom(this.api.startSession());
-      this.startedAtMs = new Date(session.startedAt).getTime();
-      this.hiddenSinceMs = null;
       this.active.set(true);
-      this.updateElapsed();
+      this.lastInteractionActiveMs = this.presence.activeMs();
+      this.adopt(session);
       this.tick = setInterval(() => this.updateElapsed(), 1000);
       this.beat = setInterval(() => this.heartbeat(), HEARTBEAT_MS);
     } catch {
@@ -110,55 +126,72 @@ export class StudySessionService {
   }
 
   private heartbeat(): void {
-    if (!this.active() || document.visibilityState !== 'visible' || this.idle()) return;
+    if (!this.active() || !this.presence.onScreen() || this.idle()) return;
     void this.enqueue(() => this.beatOnce());
   }
 
   private idle(): boolean {
-    return Date.now() - this.lastInteractionMs > IDLE_LIMIT_MS;
+    return this.presence.activeMs() - this.lastInteractionActiveMs > IDLE_LIMIT_MS;
   }
 
   private async beatOnce(): Promise<void> {
     if (!this.active()) return;
     try {
-      const session = await firstValueFrom(this.api.heartbeatSession());
       // O servidor pode ter aberto uma sessão nova (a anterior expirou):
-      // acompanha o início dele para não exibir um tempo que ninguém creditou.
-      this.startedAtMs = new Date(session.startedAt).getTime();
-      this.updateElapsed();
+      // acompanha a contagem dele para não exibir tempo que ninguém creditou.
+      this.adopt(await firstValueFrom(this.api.heartbeatSession()));
     } catch {
       /* uma falha isolada não derruba o cronômetro */
     }
   }
 
   /**
-   * Aba escondida congela o relógio; voltar depois do limite de ociosidade
-   * fecha a sessão antiga e começa outra, do zero.
+   * Saiu da tela: congela o relógio aqui e avisa o servidor, que passa a
+   * descontar o intervalo. Voltou: retoma de onde parou (ou de uma sessão
+   * nova, se o servidor tiver desistido de esperar).
    */
-  private onVisibilityChange(): void {
+  private onPresenceChange(onScreen: boolean): void {
     if (!this.active() && this.holders === 0) return;
 
-    if (document.visibilityState === 'hidden') {
-      this.hiddenSinceMs = Date.now();
-      return;
-    }
-
-    const awayMs = this.hiddenSinceMs === null ? 0 : Date.now() - this.hiddenSinceMs;
-    this.hiddenSinceMs = null;
-    this.lastInteractionMs = Date.now(); // voltar para a aba já é sinal de vida
-    if (awayMs < IDLE_LIMIT_MS) {
+    if (!onScreen) {
       this.updateElapsed();
+      this.paused.set(true);
+      void this.enqueue(() => this.syncWith(this.api.pauseSession()));
       return;
     }
 
-    void this.restart();
+    this.lastInteractionActiveMs = this.presence.activeMs(); // voltar já é sinal de vida
+    void this.enqueue(async () => {
+      await this.syncWith(this.api.resumeSession());
+      this.paused.set(false);
+    });
   }
 
-  private restart(): Promise<unknown> {
-    return this.enqueue(async () => {
-      if (this.active()) await this.close();
-      if (this.holders > 0) await this.open();
-    });
+  private async syncWith(call: Observable<StudySession>): Promise<void> {
+    if (!this.active()) return;
+    try {
+      this.adopt(await firstValueFrom(call));
+    } catch {
+      /* o cronômetro local já está pausado; o servidor se acerta no próximo sinal */
+    }
+  }
+
+  /**
+   * Adota a contagem do servidor como base e volta a somar a partir dela.
+   *
+   * Dentro da mesma sessão o relógio só anda para frente: uma resposta que
+   * venha atrasada, sem `activeSeconds` (servidor antigo) ou com menos tempo
+   * do que já está na tela não pode zerar o mostrador — a cada heartbeat o
+   * cronômetro voltaria para 00:00:00. Recomeçar do zero é privilégio de uma
+   * sessão nova, e essa se identifica pelo id diferente.
+   */
+  private adopt(session: { id: string; activeSeconds?: number }): void {
+    const restarted = session.id !== this.sessionId;
+    this.sessionId = session.id;
+    const fromServer = session.activeSeconds ?? 0;
+    this.syncedSeconds = restarted ? fromServer : Math.max(fromServer, this.elapsedSeconds());
+    this.syncedAtActiveMs = this.presence.activeMs();
+    this.updateElapsed();
   }
 
   /** pagehide não espera Promises — usa fetch keepalive. */
@@ -180,17 +213,21 @@ export class StudySessionService {
     this.tick = null;
     this.beat = null;
     this.active.set(false);
-    this.startedAtMs = null;
-    this.hiddenSinceMs = null;
+    this.paused.set(false);
+    this.sessionId = null;
+    this.syncedSeconds = 0;
+    this.syncedAtActiveMs = 0;
     this.elapsedSeconds.set(0);
   }
 
   private updateElapsed(): void {
-    if (this.startedAtMs === null) return;
-    // Mostra só o que o servidor creditaria: o relógio para junto com o
-    // heartbeat (ociosidade) e nunca passa do teto de uma sessão.
-    const until = Math.min(Date.now(), this.lastInteractionMs + IDLE_LIMIT_MS);
-    const elapsed = Math.min(until - this.startedAtMs, MAX_SESSION_MS);
+    if (!this.active()) return;
+    // Mostra só o que o servidor creditaria: o tempo fora da tela não entra
+    // (activeMs não anda lá), o relógio para junto com o heartbeat
+    // (ociosidade) e nunca passa do teto de uma sessão.
+    const until = Math.min(this.presence.activeMs(), this.lastInteractionActiveMs + IDLE_LIMIT_MS);
+    const sinceSync = Math.max(0, until - this.syncedAtActiveMs);
+    const elapsed = Math.min(this.syncedSeconds * 1000 + sinceSync, MAX_SESSION_MS);
     this.elapsedSeconds.set(Math.max(0, Math.floor(elapsed / 1000)));
   }
 }

@@ -84,6 +84,10 @@ learnway:
     # Sem heartbeat por este tempo, a sessão é considerada abandonada e
     # fechada no último sinal de vida.
     idle-timeout-minutes: ${SESSION_IDLE_TIMEOUT_MINUTES:10}
+    # Fora da tela o cronômetro fica pausado (esse tempo não é creditado).
+    # Passada esta folga, a sessão é encerrada onde a pausa começou: voltar
+    # horas depois tem de abrir uma sessão nova, no dia certo do gráfico.
+    pause-grace-minutes: ${SESSION_PAUSE_GRACE_MINUTES:180}
   jwt:
     # Base64-encoded 256-bit secret. Override in production via JWT_SECRET.
     secret: ${JWT_SECRET:Y2hhbmdlLW1lLXRoaXMtaXMtYS1kZXYtb25seS1zZWNyZXQtMjU2LWJpdC1rZXktMDAwMQ==}

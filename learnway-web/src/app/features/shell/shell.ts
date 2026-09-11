@@ -5,59 +5,72 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { StudySessionService } from '../../core/study-session.service';
 import { Icon } from '../../shared/icon';
+import { ThemeToggle } from '../../shared/theme-toggle';
 import { Avatar, ProgressBar } from '../../shared/widgets';
 
 @Component({
   selector: 'lw-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Avatar, ProgressBar],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Avatar, ProgressBar, ThemeToggle],
   template: `
     <header class="masthead">
       <div class="masthead__inner">
-        <a class="brand" routerLink="/">
+        <!-- data-intro: ganchos da coreografia de entrada da home
+             (features/dashboard). O estado inicial mora em styles.scss
+             (html.lw-intro-masthead) e a home leva cada peça ao lugar. -->
+        <a class="brand" routerLink="/" data-intro="logo">
           <lw-icon name="gem" [size]="18" />
           <span class="brand__name">LearnWay</span>
         </a>
 
         <nav class="nav">
-          <a routerLink="/" routerLinkActive="nav__link--active" [routerLinkActiveOptions]="{ exact: true }" class="nav__link">
+          <a routerLink="/" routerLinkActive="nav__link--active" [routerLinkActiveOptions]="{ exact: true }" class="nav__link" data-intro="nav">
             <lw-icon name="home" [size]="18" class="nav__icon" /><span>Início</span>
           </a>
-          <a routerLink="/trilha" routerLinkActive="nav__link--active" class="nav__link">
+          <a routerLink="/trilha" routerLinkActive="nav__link--active" class="nav__link" data-intro="nav">
             <lw-icon name="map" [size]="18" class="nav__icon" /><span>Trilha</span>
           </a>
-          <a routerLink="/teoria" routerLinkActive="nav__link--active" class="nav__link">
+          <a routerLink="/teoria" routerLinkActive="nav__link--active" class="nav__link" data-intro="nav">
             <lw-icon name="book-open" [size]="18" class="nav__icon" /><span>Teoria</span>
           </a>
-          <a routerLink="/revisoes" routerLinkActive="nav__link--active" class="nav__link">
+          <a routerLink="/revisoes" routerLinkActive="nav__link--active" class="nav__link" data-intro="nav">
             <lw-icon name="gem" [size]="18" class="nav__icon" /><span>Revisões</span>
           </a>
-          <a routerLink="/flashcards" routerLinkActive="nav__link--active" class="nav__link">
+          <a routerLink="/flashcards" routerLinkActive="nav__link--active" class="nav__link" data-intro="nav">
             <lw-icon name="cards" [size]="18" class="nav__icon" /><span>Cartas</span>
           </a>
-          <a routerLink="/ranking" routerLinkActive="nav__link--active" class="nav__link">
+          <!-- Os dois últimos saem da barra no celular e reaparecem no menu do
+               avatar: sete rótulos em mono somam 409px e não cabem em tela de
+               360px — "Calendário" ficava cortado na borda. Cinco é o teto de
+               uma barra de rodapé; o resto fica a dois toques. -->
+          <a routerLink="/ranking" routerLinkActive="nav__link--active" class="nav__link nav__link--extra" data-intro="nav">
             <lw-icon name="trophy" [size]="18" class="nav__icon" /><span>Ranking</span>
           </a>
-          <a routerLink="/calendario" routerLinkActive="nav__link--active" class="nav__link">
+          <a routerLink="/calendario" routerLinkActive="nav__link--active" class="nav__link nav__link--extra" data-intro="nav">
             <lw-icon name="calendar" [size]="18" class="nav__icon" /><span>Calendário</span>
           </a>
         </nav>
 
         <div class="status">
           @if (session.active()) {
-            <span class="stat stat--timer" title="Tempo de estudo desta sessão">
-              <lw-icon name="timer" [size]="13" /> {{ session.display() }}
+            <span class="stat stat--timer" data-intro="status" [class.stat--paused]="session.paused()"
+                  [title]="session.paused()
+                    ? 'Cronômetro pausado — o tempo fora da tela não conta'
+                    : 'Tempo de estudo desta sessão'">
+              <lw-icon [name]="session.paused() ? 'pause' : 'timer'" [size]="13" /> {{ session.display() }}
             </span>
           }
-          <span class="stat stat--streak" title="Dias consecutivos de estudo">
+          <span class="stat stat--streak" data-intro="status" title="Dias consecutivos de estudo">
             <lw-icon name="flame" [size]="13" /> {{ user()?.streakDays ?? 0 }}
           </span>
-          <span class="stat stat--level" title="Nível {{ user()?.level }} — {{ user()?.xpIntoLevel }}/{{ user()?.xpForNextLevel }} XP">
+          <span class="stat stat--level" data-intro="status" title="Nível {{ user()?.level }} — {{ user()?.xpIntoLevel }}/{{ user()?.xpForNextLevel }} XP">
             <span class="stat__nv">NV</span> {{ user()?.level ?? 1 }}
             <span class="stat__bar"><lw-progress [value]="xpPercent()" [height]="3" /></span>
           </span>
 
-          <div class="menu">
+          <lw-theme-toggle class="toggle-slot" data-intro="status" />
+
+          <div class="menu" data-intro="status">
             <button class="menu__trigger" (click)="menuOpen.set(!menuOpen())" aria-label="Menu do usuário">
               <lw-avatar [name]="user()?.username ?? '?'" [url]="user()?.avatarUrl" [size]="34" />
             </button>
@@ -68,7 +81,16 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
                   <strong>{{ user()?.username }}</strong>
                   <span class="muted">{{ user()?.email }}</span>
                 </div>
-                <a routerLink="/perfil" class="menu__item" (click)="menuOpen.set(false)">
+                <!-- Só no celular: aqui moram os destinos que saíram da barra
+                     de rodapé. No desktop eles já estão na nav do cabeçalho e
+                     repeti-los seria ruído. -->
+                <a routerLink="/ranking" routerLinkActive="menu__item--active" class="menu__item menu__item--extra" (click)="menuOpen.set(false)">
+                  <lw-icon name="trophy" [size]="16" /> Ranking
+                </a>
+                <a routerLink="/calendario" routerLinkActive="menu__item--active" class="menu__item menu__item--extra" (click)="menuOpen.set(false)">
+                  <lw-icon name="calendar" [size]="16" /> Calendário
+                </a>
+                <a routerLink="/perfil" routerLinkActive="menu__item--active" class="menu__item" (click)="menuOpen.set(false)">
                   <lw-icon name="user" [size]="16" /> Meu perfil
                 </a>
                 <button class="menu__item menu__item--danger" (click)="logout()">
@@ -97,9 +119,20 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
       top: 0;
       z-index: 50;
       background: var(--color-bg-topbar);
+      border-bottom: 1px solid var(--lw-rule);
+    }
+    /* O desfoque mora num pseudo-elemento, NÃO no masthead: backdrop-filter
+       faz do elemento um bloco de contenção para position: fixed, e a nav
+       de rodapé do mobile (fixed) ficava presa dentro do cabeçalho. O sticky
+       com z-index já é um contexto de empilhamento, então o z-index negativo
+       do pseudo fica atrás do conteúdo do cabeçalho e na frente da página. */
+    .masthead::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
       backdrop-filter: blur(var(--lw-blur-nav)) saturate(140%);
       -webkit-backdrop-filter: blur(var(--lw-blur-nav)) saturate(140%);
-      border-bottom: 1px solid var(--lw-rule);
     }
     .masthead__progress {
       position: absolute;
@@ -176,10 +209,21 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
       color: var(--lw-ink-muted);
     }
     .stat--timer  { color: var(--lw-eval-correct); border-left: none; padding-left: 0; }
+    /* Fora da tela o relógio congela — o cinza diz que ninguém está contando. */
+    .stat--paused { color: var(--lw-ink-muted); }
     .stat--streak { color: var(--lw-streak); }
     .stat--level  { gap: 7px; color: var(--lw-level); }
     .stat__nv { color: var(--lw-ink-faint); }
     .stat__bar { width: 44px; display: inline-flex; }
+
+    /* O alternador entra na fileira de leituras: mesmo fio vertical à
+       esquerda que separa streak de nível. */
+    .toggle-slot {
+      display: flex;
+      align-items: center;
+      padding-left: var(--lw-space-md);
+      border-left: 1px solid var(--lw-rule);
+    }
 
     .menu { position: relative; padding-left: var(--lw-space-sm); }
     .menu__trigger {
@@ -237,6 +281,18 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
       lw-icon { color: currentColor; }
       &:hover { background: var(--lw-eval-wrong-bg); }
     }
+    .menu__item--active {
+      color: var(--lw-accent);
+      lw-icon { color: currentColor; }
+    }
+    /* Os destinos migrados só existem enquanto a barra de rodapé existe. */
+    .menu__item--extra { display: none; }
+
+    /* No celular este menu deixou de ser só "perfil e sair" e virou navegação
+       de verdade — então as linhas precisam da altura de um toque. */
+    @media (pointer: coarse) {
+      .menu__item { min-height: 44px; padding: 11px 10px; }
+    }
 
     /* No mobile a nav desce para a base e volta a ser ícone + rótulo. */
     @media (max-width: 900px) {
@@ -251,11 +307,13 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
         -webkit-backdrop-filter: blur(var(--lw-blur-nav));
         border-top: 1px solid var(--lw-rule);
         justify-content: space-around;
-        padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
+        padding: 7px 4px calc(7px + var(--lw-safe-b));
       }
       .nav__icon { display: block; }
       .nav__link {
-        flex-direction: column; gap: 3px; padding: 5px 6px;
+        flex: 1;
+        justify-content: center;
+        flex-direction: column; gap: 3px; padding: 5px 4px;
         font-family: var(--lw-font-mono);
         font-size: 9.5px;
         letter-spacing: var(--lw-tracking-micro);
@@ -263,7 +321,25 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
       }
       .nav__link::after { display: none; }
       .nav__link--active { color: var(--lw-accent); }
+      /* Fora da barra; vivem no menu do avatar (ver .menu__item--extra). */
+      .nav__link--extra { display: none; }
+      .menu__item--extra { display: flex; }
       .stat__bar { display: none; }
+
+      /* Dedo pede 44px. A tinta continua do tamanho que era: quem cresce é a
+         área sensível, esticada por um pseudo-elemento centrado — assim o
+         cabeçalho não engorda e o alvo passa a caber o polegar. */
+      .menu__trigger, .toggle-slot lw-theme-toggle { position: relative; }
+      .menu__trigger::after,
+      .brand::after {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%; min-width: 44px;
+        height: 44px;
+      }
+      .brand { position: relative; }
     }
     @media (max-width: 560px) {
       .stat--timer { display: none; }

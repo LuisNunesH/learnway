@@ -18,6 +18,12 @@ function tokenRgb(name: string, fallback: [number, number, number]): [number, nu
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+/** Idem, para token numérico puro (--lw-backdrop-gain). */
+function tokenNumber(name: string, fallback: number): number {
+  const raw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  return Number.isFinite(raw) ? raw : fallback;
+}
+
 /**
  * Plano de fundo ambiente do app (atrás de TODAS as páginas), dirigido por GSAP.
  *
@@ -70,6 +76,9 @@ export class Backdrop implements OnDestroy {
   // ---- tinta (lida dos tokens, para não divergir do tema) ----
   private ink: [number, number, number] = [25, 23, 20];
   private accent: [number, number, number] = [176, 71, 43];
+  // Multiplicador de opacidade por tema: no nanquim a tinta é clara e
+  // some sobre preto se usar a mesma intensidade do papel.
+  private gain = 1;
 
   // ---- geometria da diagramação ----
   private readonly columns = 12;      // guias verticais da grade
@@ -114,10 +123,24 @@ export class Backdrop implements OnDestroy {
     if (!ctx) return;
     this.ctx = ctx;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.ink = tokenRgb('--lw-ink', this.ink);
-    this.accent = tokenRgb('--lw-accent', this.accent);
+    this.readTheme();
     this.buildGrain();
     this.resize();
+
+    // O tema vive num atributo do <html> (ThemeService). Trocar de tema troca
+    // a tinta da grade, então o grão precisa ser refeito com a cor nova — é a
+    // única coisa aqui que guarda pixels em vez de ler o token a cada frame.
+    const themeObserver = new MutationObserver(() => {
+      this.readTheme();
+      this.grainPattern = null;
+      this.buildGrain();
+      if (this.reduced) this.draw();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    this.cleanups.push(() => themeObserver.disconnect());
 
     this.zone.runOutsideAngular(() => {
       const onMove = (e: PointerEvent) => {
@@ -177,6 +200,13 @@ export class Backdrop implements OnDestroy {
       this.tick = (_time: number, delta: number) => this.frame(delta);
       gsap.ticker.add(this.tick);
     });
+  }
+
+  /** (Re)lê do CSS a tinta, o acento e o ganho do tema atual. */
+  private readTheme(): void {
+    this.ink = tokenRgb('--lw-ink', this.ink);
+    this.accent = tokenRgb('--lw-accent', this.accent);
+    this.gain = tokenNumber('--lw-backdrop-gain', 1);
   }
 
   /** Acende a faixa de leitura (0..1); decai a cada frame. */
@@ -272,7 +302,7 @@ export class Backdrop implements OnDestroy {
 
     // ---- 1. grão do papel ----
     if (this.grainPattern) {
-      ctx.globalAlpha = this.grainAlpha;
+      ctx.globalAlpha = this.grainAlpha * this.gain;
       ctx.fillStyle = this.grainPattern;
       ctx.fillRect(0, 0, w, h);
       ctx.globalAlpha = 1;
@@ -286,7 +316,7 @@ export class Backdrop implements OnDestroy {
     for (let i = 0; i <= this.columns; i++) {
       // As guias das extremidades são as margens: um tom mais presentes.
       const edge = i === 0 || i === this.columns;
-      ctx.strokeStyle = `rgba(${ir}, ${ig}, ${ib}, ${this.colAlpha * (edge ? 1.6 : 1)})`;
+      ctx.strokeStyle = `rgba(${ir}, ${ig}, ${ib}, ${this.colAlpha * this.gain * (edge ? 1.6 : 1)})`;
       const x = Math.round(left + i * step + sx * (edge ? 0.4 : 1)) + 0.5;
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -309,7 +339,7 @@ export class Backdrop implements OnDestroy {
       const near = Math.max(0, 1 - Math.abs(py - focus) / (h * 0.42));
       const heat = energy * near * this.ptrActiveOrOne();
 
-      const a = this.ruleAlpha + near * 0.03 + heat * 0.10;
+      const a = (this.ruleAlpha + near * 0.03 + heat * 0.10) * this.gain;
       ctx.strokeStyle = heat > 0.02
         ? `rgba(${ar}, ${ag}, ${ab}, ${a})`
         : `rgba(${ir}, ${ig}, ${ib}, ${a})`;
@@ -319,7 +349,7 @@ export class Backdrop implements OnDestroy {
       ctx.stroke();
 
       // Traços de régua nas margens — o detalhe que denuncia a diagramação.
-      ctx.strokeStyle = `rgba(${ir}, ${ig}, ${ib}, ${this.ruleAlpha * 1.8 + heat * 0.12})`;
+      ctx.strokeStyle = `rgba(${ir}, ${ig}, ${ib}, ${(this.ruleAlpha * 1.8 + heat * 0.12) * this.gain})`;
       ctx.beginPath();
       ctx.moveTo(marginL - tickLen, py);
       ctx.lineTo(marginL, py);

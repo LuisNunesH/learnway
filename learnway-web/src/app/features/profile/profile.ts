@@ -9,11 +9,16 @@ import { Avatar, ProgressBar } from '../../shared/widgets';
 
 /**
  * Rampa sequencial de UM matiz (o terracota da marca) sobre o papel — o
- * tratamento correto para um heatmap. O nível 0 ("sem atividade") é o papel
- * rebaixado. Degraus ordinais ≥1.25 entre vizinhos e topo ≥3:1 contra o card,
- * validados em scratchpad/contrast-editorial.js. Espelha --lw-ramp-0..4.
+ * tratamento correto para um heatmap. O nível 0 ("sem atividade") é a
+ * superfície rebaixada. Degraus ordinais ≥1.25 entre vizinhos e topo ≥3:1
+ * contra o card, validados em scratchpad/contrast-editorial.js e
+ * contrast-dark.js. São var() e não hex porque a rampa inverte de sentido
+ * no tema escuro: lá ela ACENDE em vermelho em vez de escurecer.
  */
-const HEAT_RAMP = ['#f1eee6', '#ebcdb8', '#d99a6e', '#bf6338', '#8e3620'];
+const HEAT_RAMP = [
+  'var(--lw-ramp-0)', 'var(--lw-ramp-1)', 'var(--lw-ramp-2)',
+  'var(--lw-ramp-3)', 'var(--lw-ramp-4)',
+];
 const WEEKDAY_LABELS = ['', 'seg', '', 'qua', '', 'sex', ''];
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 

@@ -22,7 +22,9 @@ import { ToastService } from '../core/toast.service';
   styles: [`
     .stack {
       position: fixed;
-      bottom: var(--lw-space-xl);
+      /* Sobe acima da nav de rodapé do celular. No desktop o guarda é 0 e a
+         pilha volta a assentar em --lw-space-xl. */
+      bottom: calc(var(--lw-space-xl) + var(--lw-bottom-guard));
       right: var(--lw-space-xl);
       z-index: 1000;
       display: flex;

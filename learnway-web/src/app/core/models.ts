@@ -332,6 +332,10 @@ export interface StudySession {
   startedAt: string;
   endedAt?: string;
   durationMinutes?: number;
+  /** Tempo de estudo real, sem o que se passou fora da tela. */
+  activeSeconds: number;
+  /** O cronômetro está congelado porque o usuário saiu da tela. */
+  paused: boolean;
 }
 
 export interface SessionStats {
@@ -340,6 +344,7 @@ export interface SessionStats {
   todayMinutes: number;
   dailyGoalMinutes: number;
   activeSessionStartedAt?: string;
+  activeSessionSeconds: number;
   weekly: { date: string; minutes: number }[];
 }
 

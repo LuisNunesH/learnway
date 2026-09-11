@@ -1,12 +1,35 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <title>LearnWay — Aprenda Java jogando</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <!-- viewport-fit=cover: sem isto o iOS devolve 0 em TODO env(safe-area-inset-*),
+       e a barra de gestos do iPhone passa a cobrir a nav de rodapé. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#faf8f3">
+  <!-- Tema antes da primeira pintura. Precisa ser inline e ficar ANTES da
+       folha de estilo: se o Angular resolvesse o tema, a página piscaria
+       clara antes de virar nanquim. Mesma chave e mesmas regras do
+       ThemeService (core/theme.service.ts) — escolha salva vence, senão
+       o sistema decide. Os valores de --lw-paper estão duplicados aqui de
+       propósito: neste ponto o CSS ainda não carregou. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lw_theme');
+        var theme = (saved === 'light' || saved === 'dark')
+          ? saved
+          : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute('content', theme === 'dark' ? '#0c0b0b' : '#faf8f3');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b0472b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h12l4 6-10 13L2 9Z'/%3E%3Cpath d='M11 3 8 9l4 13 4-13-3-6'/%3E%3Cpath d='M2 9h20'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
