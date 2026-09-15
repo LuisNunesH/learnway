@@ -9,7 +9,7 @@ import { MarkdownPipe } from '../../shared/markdown.pipe';
 import { TheoryAsk } from './theory-ask';
 import { TheoryChat } from './theory-chat';
 import { TheoryChatSessionService } from './theory-chat-session.service';
-import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
+import { THEORY_ARTICLES, THEORY_SECTIONS, TheoryArticle } from './theory.content';
 
 /**
  * Página de conteúdo teórico: leitura pura, sem exercícios.
@@ -39,24 +39,31 @@ import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
         <aside class="sidebar" aria-label="Assuntos">
           <span class="term-label sidebar__label">assuntos</span>
           <nav class="topics">
-            @for (article of articles; track article.id) {
-              <button
-                class="topic"
-                [class.topic--active]="article.id === selected().id"
-                (click)="select(article)">
-                <lw-icon [name]="article.icon" [size]="15" class="topic__icon" />
-                <span class="topic__text">
-                  <strong>{{ article.title }}</strong>
-                  <span class="topic__meta">
-                    {{ article.readingMinutes }} min
-                    @if (notes()[article.id]) {
-                      <span class="topic__note-flag" title="Você tem uma anotação neste assunto">
-                        <lw-icon name="pen" [size]="11" />
+            @for (section of sections; track section.id) {
+              <div class="section" role="group" [attr.aria-label]="section.title">
+                <span class="term-label section__label">{{ section.title }}</span>
+                <div class="section__list">
+                  @for (article of section.articles; track article.id) {
+                    <button
+                      class="topic"
+                      [class.topic--active]="article.id === selected().id"
+                      (click)="select(article)">
+                      <lw-icon [name]="article.icon" [size]="15" class="topic__icon" />
+                      <span class="topic__text">
+                        <strong>{{ article.title }}</strong>
+                        <span class="topic__meta">
+                          {{ article.readingMinutes }} min
+                          @if (notes()[article.id]) {
+                            <span class="topic__note-flag" title="Você tem uma anotação neste assunto">
+                              <lw-icon name="pen" [size]="11" />
+                            </span>
+                          }
+                        </span>
                       </span>
-                    }
-                  </span>
-                </span>
-              </button>
+                    </button>
+                  }
+                </div>
+              </div>
             }
           </nav>
         </aside>
@@ -66,7 +73,7 @@ import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
           @if (selected(); as article) {
             <header class="reader__head">
               <span class="lw-label reader__kicker">
-                <lw-icon [name]="article.icon" [size]="12" /> Artigo · {{ article.readingMinutes }} min de leitura
+                <lw-icon [name]="article.icon" [size]="12" /> {{ sectionTitle() }} · {{ article.readingMinutes }} min de leitura
               </span>
               <h2 class="reader__title">{{ article.title }}</h2>
               <p class="reader__lede">{{ article.summary }}</p>
@@ -228,6 +235,15 @@ import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
     }
     .sidebar__label { color: var(--lw-ink-faint); }
     .topics { display: flex; flex-direction: column; }
+    /* Cada seção é um bloco do sumário: rótulo micro alinhado ao texto dos
+       assuntos (2px do fio da borda + o mesmo recuo) e um respiro entre blocos. */
+    .section { display: flex; flex-direction: column; }
+    .section + .section { margin-top: var(--lw-space-lg); }
+    .section__label {
+      padding: 0 0 4px calc(var(--lw-space-md) + 2px);
+      color: var(--lw-ink-faint);
+    }
+    .section__list { display: flex; flex-direction: column; }
     .topic {
       display: flex;
       align-items: flex-start;
@@ -493,7 +509,16 @@ import { THEORY_ARTICLES, TheoryArticle } from './theory.content';
         border-bottom: 1px solid var(--lw-rule);
       }
       .topics { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+      /* Na faixa horizontal cada seção é uma coluna "rótulo + fila de
+         cartões", e as seções se enfileiram; os cartões têm largura fixa
+         (não podem herdar o width:100% do desktop, senão só um aparece). */
+      .section { flex-shrink: 0; }
+      .section + .section { margin-top: 0; margin-left: var(--lw-space-xl); }
+      .section__label { padding: 0 0 2px; white-space: nowrap; }
+      .section__list { flex-direction: row; }
       .topic {
+        width: 190px;
+        flex: 0 0 auto;
         min-width: 190px;
         border-left: none;
         border-bottom: 2px solid transparent;
@@ -526,8 +551,13 @@ export class TheoryPage implements OnInit, OnDestroy {
   /** Mesmo limite do backend (VARCHAR(2000) + bean validation). */
   readonly NOTE_MAX = 2000;
 
-  readonly articles = THEORY_ARTICLES;
+  readonly sections = THEORY_SECTIONS;
   readonly selected = signal<TheoryArticle>(THEORY_ARTICLES[0]);
+  /** Nome da seção do artigo aberto, para o kicker do cabeçalho. */
+  readonly sectionTitle = computed(() => {
+    const id = this.selected().id;
+    return this.sections.find(s => s.articles.some(a => a.id === id))?.title ?? 'Artigo';
+  });
 
   /** Anotações do usuário indexadas pelo slug do artigo. */
   readonly notes = signal<Record<string, TheoryNote>>({});

@@ -1,7 +1,11 @@
+import { AI_ARTICLES } from './theory-ai.content';
+
 /**
  * Biblioteca de conteúdo teórico (sem exercícios, só leitura).
  * Cada artigo é markdown puro, renderizado com a classe global `.md`.
- * Para adicionar um novo assunto, basta acrescentar um objeto aqui.
+ * Para adicionar um novo assunto, basta acrescentar um objeto aqui (ou no
+ * arquivo da seção, como `theory-ai.content.ts`) e listá-lo na seção certa
+ * de `THEORY_SECTIONS`, no fim deste arquivo.
  */
 export interface TheoryArticle {
   /** slug usado na URL e no track */
@@ -17,6 +21,13 @@ export interface TheoryArticle {
   readingMinutes: number;
   /** corpo em markdown */
   body: string;
+}
+
+/** Grupo de artigos exibido com cabeçalho próprio no sumário da página. */
+export interface TheorySection {
+  id: string;
+  title: string;
+  articles: TheoryArticle[];
 }
 
 const JPA_HIBERNATE: TheoryArticle = {
@@ -3554,18 +3565,37 @@ Como escolher, sem torcida:
 `.trim(),
 };
 
-export const THEORY_ARTICLES: TheoryArticle[] = [
-  JPA_HIBERNATE,
-  SPRING_DATA_PRATICA,
-  REST_APIS,
-  SEGURANCA_JWT,
-  TESTES_AUTOMATIZADOS,
-  DOCKER_JAVA,
-  GIT_EQUIPES,
-  ARQUITETURA_CAMADAS,
-  ESTRUTURA_PASTAS,
-  MICROSSERVICOS,
-  MENSAGERIA,
-  RABBITMQ,
-  KAFKA,
+/**
+ * Seções do sumário, na ordem em que aparecem. A ordem dos artigos dentro de
+ * cada seção é a ordem de leitura sugerida.
+ */
+export const THEORY_SECTIONS: TheorySection[] = [
+  {
+    id: 'backend',
+    title: 'Fundamentos do backend',
+    articles: [JPA_HIBERNATE, SPRING_DATA_PRATICA, REST_APIS, SEGURANCA_JWT, TESTES_AUTOMATIZADOS],
+  },
+  {
+    id: 'ferramentas',
+    title: 'Ferramentas',
+    articles: [DOCKER_JAVA, GIT_EQUIPES],
+  },
+  {
+    id: 'arquitetura',
+    title: 'Arquitetura',
+    articles: [ARQUITETURA_CAMADAS, ESTRUTURA_PASTAS, MICROSSERVICOS],
+  },
+  {
+    id: 'mensageria',
+    title: 'Mensageria',
+    articles: [MENSAGERIA, RABBITMQ, KAFKA],
+  },
+  {
+    id: 'ia-agentes',
+    title: 'IA & Agentes',
+    articles: AI_ARTICLES,
+  },
 ];
+
+/** Lista plana, na mesma ordem do sumário — para quem só precisa dos artigos. */
+export const THEORY_ARTICLES: TheoryArticle[] = THEORY_SECTIONS.flatMap(section => section.articles);
